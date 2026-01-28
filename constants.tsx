@@ -19,6 +19,7 @@ export const MODULES: ModuleData[] = [
     id: 'ADN',
     name: 'ADN: Dependencia Digital',
     description: 'Análisis de criticidad y mapa de dependencias tecnológicas, humanas y de terceros.',
+    objetivo: 'Establecer el contexto de negocio, los niveles de criticidad y los umbrales de tolerancia del proceso. Este módulo actúa como la "brújula" del motor, configurando dinámicamente los pesos y los techos de score (Gates) según el impacto real en la operación.',
     icon: 'Network',
     questions: [
       { 
@@ -251,6 +252,7 @@ export const MODULES: ModuleData[] = [
     id: 'CIBER',
     name: 'Ciberseguridad (CIS Controls IG1)',
     description: 'Auditoría exhaustiva de los 18 Controles Críticos de CIS (Implementation Group 1) desglosados en 43 salvaguardas esenciales.',
+    objetivo: 'Evaluar la robustez de la higiene técnica y la madurez defensiva. Se basa en los controles internacionales más efectivos para mitigar ataques de alto impacto (Ransomware/Phishing), asegurando que la infraestructura digital sea capaz de resistir y recuperarse de incidentes.',
     icon: 'ShieldCheck',
     questions: [
       { id: 1, peso: 4, pregunta: "¿La organización mantiene un inventario completo, actualizado y verificable de todos los activos (estaciones, servidores, dispositivos de red, móviles y otros), identificando tipo, responsable, criticidad y ubicación, y lo revisa periódicamente?" },
@@ -264,7 +266,7 @@ export const MODULES: ModuleData[] = [
       { id: 9, peso: 8, pregunta: "¿Los activos nuevos, reinstalados o reprovisionados se incorporan a producción exclusivamente con configuraciones seguras aplicadas, existiendo un proceso técnico que impida su uso operativo antes de cumplir el baseline definido?" },
       { id: 10, peso: 9, pregunta: "¿Los sistemas, servicios y aplicaciones se configuran de forma segura desde su despliegue, eliminando credenciales por defecto, restringiendo funciones administrativas solo a roles autorizados, y evitando accesos anónimos o innecesarios?" },
       { id: 11, peso: 9, pregunta: "¿La organización identifica y deshabilita sistemáticamente servicios, puertos, módulos o funcionalidades innecesarias en estaciones, servidores y dispositivos de red, asegurando que esta práctica forme parte del baseline de configuración segura y no dependa solo de acciones correctivas posteriores?" },
-      { id: 12, peso: 9, pregunta: "¿Las cuentas locales, especialmente las administrativas, se encuentran restringidas, controladas y gestionadas mediante políticas técnicas (por ejemplo, LAPS o equivalentes), evitando su uso compartido y limitando privilegios únicamente a casos justificados y documentados?" },
+      { id: 12, peso: 9, pregunta: "¿Las cuentas locales, especially las administrativas, se encuentran restringidas, controladas y gestionadas mediante políticas técnicas (por ejemplo, LAPS o equivalentes), evitando su uso compartido y limitando privilegios únicamente a casos justificados y documentados?" },
       { id: 13, peso: 9, pregunta: "¿El uso de scripts, macros y código embebido se encuentra restringido por política y controles técnicos, permitiendo solo aquellos estrictamente necesarios para la operación, y bloqueando la ejecución de código no autorizado que pueda facilitar la entrega de malware?" },
       { id: 14, peso: 7, pregunta: "¿La organización mantiene un inventario completo y actualizado de todas las cuentas (usuarios, administrativas, de servicio y de terceros), identificando propósito, nivel de privilegio y responsable, y lo revisa periódicamente para asegurar su vigencia y trazabilidad?" },
       { id: 15, peso: 9, pregunta: "¿Existen criterios formales de inactividad y un proceso automático u operativo que asegure la deshabilitación oportuna de cuentas sin uso, registrando las acciones realizadas y minimizando el riesgo de reutilización maliciosa de credenciales?" },
@@ -302,6 +304,7 @@ export const MODULES: ModuleData[] = [
     id: 'LEGAL',
     name: 'Protección de Datos (Ley 21.719)',
     description: 'Cumplimiento normativo del nuevo marco legal chileno de protección de la vida privada y datos personales.',
+    objetivo: 'Medir el grado de defendibilidad jurídica ante el tratamiento de datos personales. Busca acreditar la licitud, el cumplimiento de derechos de titulares y la capacidad de notificación oportuna, protegiendo a la organización ante multas severas y riesgos reputacionales.',
     icon: 'Scale',
     questions: [
       { id: 1, peso: 8, pregunta: "¿La organización puede acreditar documentalmente que cada tratamiento de datos personales se realiza de manera lícita y leal, identificando su base legal aplicable, y mantiene dicha información actualizada y disponible para fiscalización o requerimiento del titular?" },
@@ -342,6 +345,7 @@ export const MODULES: ModuleData[] = [
     id: 'INFRA',
     name: 'Continuidad Operacional (Infraestructura)',
     description: 'Resiliencia de la infraestructura física, ambiental y eléctrica para soportar la operación crítica.',
+    objetivo: 'Garantizar la resiliencia del entorno físico y lógico que soporta el proceso. Evalúa la redundancia eléctrica, climatización, seguridad física de salas de datos y conectividad, asegurando que el negocio no se detenga por fallas en los cimientos tecnológicos.',
     icon: 'Server',
     questions: [
       { id: 1, peso: 8, pregunta: "¿La organización dispone de una sala dedicada y físicamente delimitada para alojar servidores, equipos de red, firewall, sistemas de respaldo y NVR/DVR, separada de oficinas, bodegas u otras áreas no controladas?" },
@@ -375,6 +379,7 @@ export const MODULES: ModuleData[] = [
     id: 'VENDOR',
     name: 'Proveedores (Cadena de Suministro)',
     description: 'Análisis de dependencia estratégica, financiera y técnica de socios tecnológicos externos.',
+    objetivo: 'Analizar los riesgos en la cadena de suministro digital y la dependencia de terceros (SaaS/Cloud). El foco está en asegurar la portabilidad de los datos, la existencia de cláusulas de salida claras y la continuidad del servicio si el proveedor crítico falla.',
     icon: 'Truck',
     questions: [
       { id: 1, peso: 5, pregunta: "¿Qué tan crítico es este proveedor para la continuidad del negocio (según el proceso que soporta)?", opciones: [{ texto: "Crítico: detiene el core del negocio", valor: 0.0 }, { texto: "Alto: afecta fuertemente la operación", valor: 0.3 }, { texto: "Medio: afecta, pero se puede operar con ajustes", valor: 0.7 }, { texto: "Bajo: su caída casi no afecta", valor: 1.0 }, NA_OPTION] },
@@ -403,6 +408,7 @@ export const MODULES: ModuleData[] = [
     id: 'PEOPLE',
     name: 'Personas (Bus Factor Humano)',
     description: 'Identificación de riesgos derivados de la gestión del talento y roles clave.',
+    objetivo: 'Identificar la dependencia de conocimiento crítico no documentado y roles exclusivos. Su fin es mitigar el "Punto Único de Falla Humano", asegurando que el proceso pueda ejecutarse ante la ausencia de personas clave mediante planes de sucesión y transferencia de know-how.',
     icon: 'Users',
     questions: [
       { id: 1, peso: 5, pregunta: "Considerando la operación real del negocio, ¿qué tan crítico es este rol para que los procesos esenciales funcionen sin interrupción?", opciones: [{ texto: "Crítico: su ausencia detiene total o parcialmente procesos clave", valor: 0.0 }, { texto: "Alto: afecta fuertemente y genera retrasos o degradación relevante", valor: 0.3 }, { texto: "Medio: afecta, pero se puede operar con ajustes menores", valor: 0.7 }, { texto: "Bajo: su ausencia no afecta procesos esenciales", valor: 1.0 }, NA_OPTION] },
@@ -427,7 +433,7 @@ export const MODULES: ModuleData[] = [
 ];
 
 export const ICONS: Record<string, React.ReactNode> = {
-  Network: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>,
+  Network: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>,
   ShieldCheck: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
   Scale: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>,
   Server: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" /></svg>,

@@ -144,6 +144,26 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, onAnswer, onBa
         </div>
       </div>
 
+      {/* Objetivo del Módulo Section */}
+      {module.objetivo && (
+        <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-[2.5rem] p-10 text-white shadow-xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-10 text-white/5 group-hover:text-white/10 transition-colors pointer-events-none">
+            {ICONS[module.icon]}
+          </div>
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+            <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10 shadow-inner flex-shrink-0">
+               <span className="text-3xl">🎯</span>
+            </div>
+            <div>
+              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 mb-2">Objetivo Estratégico</h4>
+              <p className="text-slate-200 text-lg font-medium leading-relaxed max-w-4xl tracking-tight">
+                {module.objetivo}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-6">
         {module.questions.map((q, idx) => {
           const currentAnswer = answers[`${module.id}_${q.id}`];

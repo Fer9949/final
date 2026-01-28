@@ -18,6 +18,7 @@ export interface ModuleData {
   id: ModuleId;
   name: string;
   description: string;
+  objetivo?: string;
   icon: string;
   questions: Question[];
 }
