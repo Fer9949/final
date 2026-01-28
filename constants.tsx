@@ -12,6 +12,8 @@ export const PROCESS_TYPES = [
   "Ventas"
 ];
 
+const NA_OPTION = { texto: "No aplica", valor: -1 };
+
 export const MODULES: ModuleData[] = [
   {
     id: 'ADN',
@@ -19,26 +21,230 @@ export const MODULES: ModuleData[] = [
     description: 'Análisis de criticidad y mapa de dependencias tecnológicas, humanas y de terceros.',
     icon: 'Network',
     questions: [
-      { id: 1, categoria: "Gobernanza", pregunta: "¿Se encuentra el proceso formalmente documentado en un manual de procedimientos vigente, incluyendo el diagrama de flujo, las entradas, salidas y los indicadores clave de desempeño (KPI)?", opciones: ["Sí, documentado y vigente", "Parcialmente, existe flujo pero no manual", "No existe documentación formal"] },
-      { id: 2, categoria: "Responsabilidad", pregunta: "¿Existe una matriz de responsabilidades (RACI) que identifique claramente quién es el dueño del proceso (Process Owner) y quiénes son los responsables de su ejecución y supervisión?", opciones: ["Sí, matriz RACI definida", "Solo responsables nombrados de palabra", "No hay responsables definidos"] },
-      { id: 3, categoria: "Criticidad Operativa", pregunta: "¿Cuál es el impacto directo en la continuidad del negocio si este proceso fallara durante un periodo de alta demanda estacional?", opciones: ["Crítico: Cese total de la operación principal", "Alto: Afecta significativamente la entrega", "Medio: Impacto operativo recuperable", "Bajo: Impacto despreciable"] },
-      { id: 4, categoria: "Riesgo Reputacional", pregunta: "¿En qué medida la falla de este proceso afectaría la imagen pública, la confianza de los clientes o generaría multas por incumplimiento de niveles de servicio (SLA)?", opciones: ["Extremo: Pérdida masiva de clientes/Imagen", "Significativo: Afecta confianza pública", "Moderado: Quejas internas o de partners", "Bajo: Sin impacto externo"] },
-      { id: 5, categoria: "Tolerancia (RTO)", pregunta: "¿Cuál es el tiempo objetivo de recuperación (RTO) máximo definido antes de que la interrupción cause un daño irreversible o financiero inasumible?", opciones: ["Crítico: Menos de 4 horas", "Urgente: Entre 4 y 24 horas", "Necesario: Entre 1 y 3 días", "Diferible: Más de una semana"] },
-      { id: 6, categoria: "Modo de Contingencia", pregunta: "¿Cuenta el proceso con un Plan de Continuidad (BCP) que incluya procedimientos de operación en 'modo degradado' o manual sin depender de sistemas TI?", opciones: ["Sí, probado y documentado", "Parcial, se conoce pero no se ha probado", "No existe alternativa manual viable"] },
-      { id: 7, categoria: "Infraestructura TI", pregunta: "¿Depende el proceso de una arquitectura local (On-premise), híbrida o en la nube, y existe redundancia configurada para los servidores que lo soportan?", opciones: ["Redundancia Total (Activo-Activo)", "Redundancia Parcial (Activo-Pasivo)", "Soporte simple sin redundancia"] },
-      { id: 8, categoria: "Ecosistema de Sistemas", pregunta: "¿Cuántas aplicaciones críticas e interfaces de integración (API, ETL) participan en el flujo de datos necesario para completar el proceso?", opciones: ["Ecosistema complejo (>5 sistemas)", "Intermedio (2 a 4 sistemas)", "Simple (1 sistema centralizado)"] },
-      { id: 9, categoria: "Puntos de Falla TI", pregunta: "Si el sistema central (ERP/Core) queda fuera de línea, ¿el proceso cuenta con una base de datos local o caché que permita seguir operando temporalmente?", opciones: ["Permite operación autónoma temporal", "Permite solo consultas", "El proceso se detiene de inmediato"] },
-      { id: 10, categoria: "Dependencia de Terceros", pregunta: "¿El proceso requiere obligatoriamente servicios de terceros (SaaS, Outsourcing, Mensajería) para que se considere finalizado correctamente?", opciones: ["Dependencia crítica de terceros", "Dependencia moderada (soporte)", "Sin dependencia de terceros"] },
-      { id: 11, categoria: "Gobernanza de Proveedores", pregunta: "¿Cuenta con contratos de soporte y mantenimiento (SLA) vigentes con los proveedores críticos que soportan este proceso?", opciones: ["SLA formal y penalidades definidas", "Acuerdo básico de soporte", "Sin contratos de soporte vigentes"] },
-      { id: 12, categoria: "Riesgo de Concentración", pregunta: "Si su proveedor principal de nube o infraestructura fallara globalmente, ¿tiene una estrategia de salida o multicloud que permita migrar el proceso?", opciones: ["Estrategia de salida probada", "Plan de migración teórico", "Dependencia total (Lock-in)"] },
-      { id: 13, categoria: "Factor Humano Crítico", pregunta: "¿Existen 'Especialistas Únicos' que poseen conocimiento exclusivo del proceso sin el cual este no podría ejecutarse o recuperarse?", opciones: ["Dependencia total de una persona", "Dependencia de un equipo pequeño", "Conocimiento distribuido y documentado"] },
-      { id: 14, categoria: "Transferencia de Conocimiento", pregunta: "¿Existe un plan de sucesión o rotación de cargos que asegure que al menos dos personas conozcan la ejecución técnica del proceso?", opciones: ["Sí, plan de sucesión activo", "Parcial, entrenamiento cruzado básico", "No, el conocimiento es silatado"] },
-      { id: 15, categoria: "Calidad de Documentación", pregunta: "¿La documentación técnica (diagramas de arquitectura, diccionarios de datos) es suficiente para que un consultor externo pueda operar el proceso?", opciones: ["Documentación completa y profesional", "Parcial, requiere guía del titular", "No existe documentación técnica"] },
-      { id: 16, categoria: "Efecto Cascada", pregunta: "¿Este proceso es el disparador (Trigger) de otros procesos críticos de la cadena de valor, como facturación, despachos o pagos?", opciones: ["Es el Core: detiene toda la cadena", "Impacta procesos adyacentes importantes", "Impacto limitado a su área"] },
-      { id: 17, categoria: "Riesgo de Datos", pregunta: "Si el proceso falla, ¿existe riesgo de pérdida de integridad de los datos (corrupción de BD) que afecte a otros módulos de la empresa?", opciones: ["Riesgo alto de desincronización masiva", "Riesgo moderado de pérdida de registros", "Bajo riesgo: datos aislados"] },
-      { id: 18, categoria: "Monitoreo de Salud", pregunta: "¿Se cuenta con tableros de control (Dashboards) o alertas automáticas que informen en tiempo real cuando el proceso se degrada?", opciones: ["Monitoreo Proactivo y Alertas", "Monitoreo Reactivo manual", "Sin monitoreo del proceso"] },
-      { id: 19, categoria: "Gestión de Crisis", pregunta: "¿Está definido el comité de crisis y los protocolos de escalamiento para cuando este proceso supera su tiempo de tolerancia?", opciones: ["Protocolos claros y comité definido", "Solo escalamiento jerárquico básico", "No hay protocolo de crisis definido"] },
-      { id: 20, categoria: "Evaluación Residual", pregunta: "Considerando controles actuales, redundancias y planes de respaldo, ¿cuál es su percepción final de riesgo de este proceso?", opciones: ["Riesgo Controlado", "Riesgo Aceptable", "Riesgo Alto", "Riesgo Crítico"] }
+      { 
+        id: 1, 
+        categoria: "Gobernanza", 
+        pregunta: "¿Se encuentra el proceso formalmente documentado en un manual de procedimientos vigente, incluyendo el diagrama de flujo, las entradas, salidas y los indicadores clave de desempeño (KPI)?", 
+        opciones: [
+          { texto: "Sí, documentado y vigente", valor: 1.0 },
+          { texto: "Parcialmente, existe flujo pero no manual", valor: 0.5 },
+          { texto: "No existe documentación formal", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 2, 
+        categoria: "Responsabilidad", 
+        pregunta: "¿Existe una matriz de responsabilidades (RACI) que identifique claramente quién es el dueño del proceso (Process Owner) y quiénes son los responsables de su ejecución y supervisión?", 
+        opciones: [
+          { texto: "Sí, matriz RACI definida", valor: 1.0 },
+          { texto: "Solo responsables nombrados de palabra", valor: 0.5 },
+          { texto: "No hay responsables definidos", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 3, 
+        categoria: "Criticidad Operativa", 
+        pregunta: "¿Cuál es el impacto directo en la continuidad del negocio si este proceso fallara durante un periodo de alta demanda estacional?", 
+        opciones: [
+          { texto: "Bajo: Impacto despreciable", valor: 1.0 },
+          { texto: "Medio: Impacto operativo recuperable", valor: 0.6 },
+          { texto: "Alto: Afecta significativamente la entrega", valor: 0.3 },
+          { texto: "Crítico: Cese total de la operación principal", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 4, 
+        categoria: "Riesgo Reputacional", 
+        pregunta: "¿En qué medida la falla de este proceso afectaría la imagen pública, la confianza de los clientes o generaría multas por incumplimiento de niveles de servicio (SLA)?", 
+        opciones: [
+          { texto: "Bajo: Sin impacto externo", valor: 1.0 },
+          { texto: "Moderado: Quejas internas o de partners", valor: 0.6 },
+          { texto: "Significativo: Afecta confianza pública", valor: 0.3 },
+          { texto: "Extremo: Pérdida masiva de clientes/Imagen", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 5, 
+        categoria: "Tolerancia (RTO)", 
+        pregunta: "¿Cuál es el tiempo objetivo de recuperación (RTO) máximo definido antes de que la interrupción cause un daño irreversible o financiero inasumible?", 
+        opciones: [
+          { texto: "Diferible: Más de una semana", valor: 1.0 },
+          { texto: "Necesario: Entre 1 y 3 días", valor: 0.6 },
+          { texto: "Urgente: Entre 4 y 24 horas", valor: 0.3 },
+          { texto: "Crítico: Menos de 4 horas", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 6, 
+        categoria: "Modo de Contingencia", 
+        pregunta: "¿Cuenta el proceso con un Plan de Continuidad (BCP) que incluya procedimientos de operación en 'modo degradado' o manual sin depender de sistemas TI?", 
+        opciones: [
+          { texto: "Sí, probado y documentado", valor: 1.0 },
+          { texto: "Parcial, se conoce pero no se ha probado", valor: 0.5 },
+          { texto: "No existe alternativa manual viable", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 7, 
+        categoria: "Infraestructura TI", 
+        pregunta: "¿Depende el proceso de una arquitectura local (On-premise), híbrida o en la nube, y existe redundancia configurada para los servidores que lo soportan?", 
+        opciones: [
+          { texto: "Redundancia Total (Activo-Activo)", valor: 1.0 },
+          { texto: "Redundancia Parcial (Activo-Pasivo)", valor: 0.5 },
+          { texto: "Soporte simple sin redundancia", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 8, 
+        categoria: "Ecosistema de Sistemas", 
+        pregunta: "¿Cuántas aplicaciones críticas e interfaces de integración (API, ETL) participan en el flujo de datos necesario para completar el proceso?", 
+        opciones: [
+          { texto: "Simple (1 sistema centralizado)", valor: 1.0 },
+          { texto: "Intermedio (2 a 4 sistemas)", valor: 0.5 },
+          { texto: "Ecosistema complejo (>5 sistemas)", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 9, 
+        categoria: "Puntos de Falla TI", 
+        pregunta: "Si el sistema central (ERP/Core) queda fuera de línea, ¿el proceso cuenta con una base de datos local o caché que permita seguir operando temporalmente?", 
+        opciones: [
+          { texto: "Permite operación autónoma temporal", valor: 1.0 },
+          { texto: "Permite solo consultas", valor: 0.5 },
+          { texto: "El proceso se detiene de inmediato", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 10, 
+        categoria: "Dependencia de Terceros", 
+        pregunta: "¿El proceso requiere obligatoriamente servicios de terceros (SaaS, Outsourcing, Mensajería) para que se considere finalizado correctamente?", 
+        opciones: [
+          { texto: "Sin dependencia de terceros", valor: 1.0 },
+          { texto: "Dependencia moderada (soporte)", valor: 0.5 },
+          { texto: "Dependencia crítica de terceros", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 11, 
+        categoria: "Gobernanza de Proveedores", 
+        pregunta: "¿Cuenta con contratos de soporte y mantenimiento (SLA) vigentes con los proveedores críticos que soportan este proceso?", 
+        opciones: [
+          { texto: "SLA formal y penalidades definidas", valor: 1.0 },
+          { texto: "Acuerdo básico de soporte", valor: 0.5 },
+          { texto: "Sin contratos de soporte vigentes", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 12, 
+        categoria: "Riesgo de Concentración", 
+        pregunta: "Si su proveedor principal de nube o infraestructura fallara globalmente, ¿tiene una estrategia de salida o multicloud que permita migrar el proceso?", 
+        opciones: [
+          { texto: "Estrategia de salida probada", valor: 1.0 },
+          { texto: "Plan de migración teórico", valor: 0.5 },
+          { texto: "Dependencia total (Lock-in)", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 13, 
+        categoria: "Factor Humano Crítico", 
+        pregunta: "¿Existen 'Especialistas Únicos' que poseen conocimiento exclusivo del proceso sin el cual este no podría ejecutarse o recuperarse?", 
+        opciones: [
+          { texto: "Conocimiento distribuido y documentado", valor: 1.0 },
+          { texto: "Dependencia de un equipo pequeño", valor: 0.5 },
+          { texto: "Dependencia total de una persona", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 14, 
+        categoria: "Transferencia de Conocimiento", 
+        pregunta: "¿Existe un plan de sucesión o rotación de cargos que asegure que al menos dos personas conozcan la ejecución técnica del proceso?", 
+        opciones: [
+          { texto: "Sí, plan de sucesión activo", valor: 1.0 },
+          { texto: "Parcial, entrenamiento cruzado básico", valor: 0.5 },
+          { texto: "No, el conocimiento es silatado", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 15, 
+        categoria: "Calidad de Documentación", 
+        pregunta: "¿La documentación técnica (diagramas de arquitectura, diccionarios de datos) es suficiente para que un consultor externo pueda operar el proceso?", 
+        opciones: [
+          { texto: "Documentación completa y profesional", valor: 1.0 },
+          { texto: "Parcial, requiere guía del titular", valor: 0.5 },
+          { texto: "No existe documentación técnica", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 16, 
+        categoria: "Efecto Cascada", 
+        pregunta: "¿Este proceso es el disparador (Trigger) de otros procesos críticos de la cadena de valor, como facturación, despachos o pagos?", 
+        opciones: [
+          { texto: "Impacto limitado a su área", valor: 1.0 },
+          { texto: "Impacta procesos adyacentes importantes", valor: 0.5 },
+          { texto: "Es el Core: detiene toda la cadena", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 17, 
+        categoria: "Riesgo de Datos", 
+        pregunta: "Si el proceso falla, ¿existe riesgo de pérdida de integridad de los datos (corrupción de BD) que afecte a otros módulos de la empresa?", 
+        opciones: [
+          { texto: "Bajo riesgo: datos aislados", valor: 1.0 },
+          { texto: "Riesgo moderado de pérdida de registros", valor: 0.5 },
+          { texto: "Riesgo alto de desincronización masiva", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 18, 
+        categoria: "Monitoreo de Salud", 
+        pregunta: "¿Se cuenta con tableros de control (Dashboards) o alertas automáticas que informen en tiempo real cuando el proceso se degrada?", 
+        opciones: [
+          { texto: "Monitoreo Proactivo y Alertas", valor: 1.0 },
+          { texto: "Monitoreo Reactivo manual", valor: 0.5 },
+          { texto: "Sin monitoreo del proceso", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 19, 
+        categoria: "Gestión de Crisis", 
+        pregunta: "¿Está definido el comité de crisis y los protocolos de escalamiento para cuando este proceso supera su tiempo de tolerancia?", 
+        opciones: [
+          { texto: "Protocolos claros y comité definido", valor: 1.0 },
+          { texto: "Solo escalamiento jerárquico básico", valor: 0.5 },
+          { texto: "No hay protocolo de crisis definido", valor: 0.0 },
+          NA_OPTION
+        ] 
+      },
+      { 
+        id: 20, 
+        categoria: "Evaluación Residual", 
+        pregunta: "Considerando controles actuales, redundancias y planes de respaldo, ¿cuál es su percepción final de riesgo de este proceso?", 
+        opciones: [
+          { texto: "Riesgo Controlado", valor: 1.0 },
+          { texto: "Riesgo Aceptable", valor: 0.7 },
+          { texto: "Riesgo Alto", valor: 0.3 },
+          { texto: "Riesgo Crítico", valor: 0.0 },
+          NA_OPTION
+        ] 
+      }
     ]
   },
   {
@@ -171,26 +377,26 @@ export const MODULES: ModuleData[] = [
     description: 'Análisis de dependencia estratégica, financiera y técnica de socios tecnológicos externos.',
     icon: 'Truck',
     questions: [
-      { id: 1, peso: 5, pregunta: "¿Qué tan crítico es este proveedor para la continuidad del negocio (según el proceso que soporta)?", opciones: [{ texto: "Bajo: su caída casi no afecta", valor: 1.0 }, { texto: "Medio: afecta, pero se puede operar con ajustes", valor: 0.7 }, { texto: "Alto: afecta fuertemente la operación", valor: 0.3 }, { texto: "Crítico: detiene el core del negocio", valor: 0.0 }] },
-      { id: 2, peso: 4, pregunta: "¿Qué tipo de proceso soporta principalmente este proveedor?", opciones: [{ texto: "Soporte (RRHH, administración, soporte interno)", valor: 1.0 }, { texto: "Operativo (operación diaria, producción/servicio)", valor: 0.3 }, { texto: "Comercial (ventas, marketing, atención comercial)", valor: 0.5 }, { texto: "Financiero (pagos, facturación, contabilidad)", valor: 0.5 }, { texto: "Core del negocio (servicio principal/ingresos)", valor: 0.0 }] },
-      { id: 3, peso: 4, pregunta: "Si este proveedor falla, ¿impacta directamente a clientes externos?", opciones: [{ texto: "No, solo impacto interno", valor: 1.0 }, { texto: "Sí, impacto menor (molestias, retrasos)", valor: 0.7 }, { texto: "Sí, impacto relevante (caída parcial del servicio)", valor: 0.3 }, { texto: "Sí, impacto crítico (no se puede atender/operar)", valor: 0.0 }] },
-      { id: 4, peso: 3, pregunta: "¿El proveedor es necesario para cumplir obligaciones legales/contractuales del negocio?", opciones: [{ texto: "No", valor: 1.0 }, { texto: "Sí, de forma indirecta (apoya evidencias/operación)", valor: 0.5 }, { texto: "Sí, de forma directa (sin esto no se cumple)", valor: 0.0 }, { texto: "No se sabe / no está evaluado", valor: 0.0 }] },
-      { id: 5, peso: 5, pregunta: "Si el proveedor deja de prestar el servicio hoy, ¿qué ocurre operativamente?", opciones: [{ texto: "No afecta la operación", valor: 1.0 }, { texto: "Se degrada, pero se mantiene funcionando", valor: 0.7 }, { texto: "Se detiene parcialmente", valor: 0.3 }, { texto: "Se detiene totalmente", valor: 0.0 }] },
-      { id: 6, peso: 4, pregunta: "¿Existe un workaround manual o alternativo que permita seguir operando?", opciones: [{ texto: "Sí, completo e inmediato", valor: 1.0 }, { texto: "Sí, parcial (solo funciones básicas)", valor: 0.5 }, { texto: "Sí, pero toma más de 24 horas activarlo", valor: 0.2 }, { texto: "No existe", valor: 0.0 }] },
-      { id: 7, peso: 5, pregunta: "¿Cuánto tiempo máximo puede operar la organización sin este proveedor antes de un impacto grave?", opciones: [{ texto: "Más de 30 días", valor: 1.0 }, { texto: "7 a 30 días", valor: 0.7 }, { texto: "1 a 6 días", valor: 0.3 }, { texto: "Menos de 24 horas / no puede operar", valor: 0.0 }] },
-      { id: 8, peso: 4, pregunta: "¿La caída de este proveedor genera efectos en cascada (otros procesos/sistemas se ven afectados)?", opciones: [{ texto: "No", valor: 1.0 }, { texto: "Sí, efectos limitados", valor: 0.7 }, { texto: "Sí, efectos relevantes", valor: 0.3 }, { texto: "Sí, efectos severos (cadena completa)", valor: 0.0 }] },
-      { id: 9, peso: 5, pregunta: "¿Los datos gestionados por el proveedor pueden exportarse completa y fácilmente en formatos estándar (CSV/JSON/SQL u otros)?", opciones: [{ texto: "Sí, exportación completa y estándar", valor: 1.0 }, { texto: "Parcial: exporta, pero falta parte relevante", valor: 0.5 }, { texto: "Difícil: exporta, pero en formato propietario / poco usable", valor: 0.2 }, { texto: "No: no es exportable o no está disponible", valor: 0.0 }] },
-      { id: 10, peso: 4, pregunta: "En caso de migrar, ¿la organización puede reconstruir su operación con esos datos (sin perder trazabilidad/histórico crítico)?", opciones: [{ texto: "Sí, sin pérdida relevante", valor: 1.0 }, { texto: "Sí, pero con pérdida menor aceptable", valor: 0.7 }, { texto: "No, se pierde información clave", valor: 0.0 }, { texto: "No se sabe / no se ha probado", valor: 0.0 }] },
-      { id: 11, peso: 4, pregunta: "¿El proveedor está integrado con otros sistemas críticos (ERP, correo, identidad, pagos, APIs)?", opciones: [{ texto: "No", valor: 1.0 }, { texto: "Sí, 1–2 integraciones simples", valor: 0.8 }, { texto: "Sí, varias integraciones relevantes", valor: 0.4 }, { texto: "Sí, integraciones críticas y complejas (dependencia alta)", valor: 0.0 }] },
-      { id: 12, peso: 4, pregunta: "¿Existe documentación técnica suficiente para migrar (integraciones, flujos, APIs, configuración, dependencias)?", opciones: [{ texto: "Sí, completa y actualizada", valor: 1.0 }, { texto: "Parcial, requiere trabajo adicional", valor: 0.5 }, { texto: "No existe o está desactualizada", valor: 0.0 }, { texto: "No se sabe", valor: 0.0 }] },
-      { id: 13, peso: 4, pregunta: "¿El contrato contempla una cláusula de salida (término, rescisión) clara y ejecutable?", opciones: [{ texto: "Sí, clara y ejecutable", valor: 1.0 }, { texto: "Sí, pero con restricciones importantes", valor: 0.5 }, { texto: "No existe", valor: 0.0 }, { texto: "No se sabe / no está revisado", valor: 0.0 }] },
-      { id: 14, peso: 3, pregunta: "¿Existen penalidades económicas por término anticipado que desincentiven salir?", opciones: [{ texto: "No", valor: 1.0 }, { texto: "Sí, bajas (monto asumible)", valor: 0.8 }, { texto: "Sí, medias (impacto relevante)", valor: 0.4 }, { texto: "Sí, altas (impide salida práctica)", valor: 0.0 }] },
-      { id: 15, peso: 3, pregunta: "¿Cuál es el plazo mínimo de aviso para terminar el contrato?", opciones: [{ texto: "Menos de 30 días", valor: 1.0 }, { texto: "30 a 90 días", valor: 0.6 }, { texto: "Más de 90 días", valor: 0.2 }, { texto: "No se sabe", valor: 0.0 }] },
-      { id: 16, peso: 4, pregunta: "¿El contrato regula explícitamente devolución/portabilidad/eliminación de datos al término?", opciones: [{ texto: "Sí, claro y específico (plazos y formato)", valor: 1.0 }, { texto: "Parcial (menciona, pero sin detalle)", valor: 0.5 }, { texto: "No (no está regulado)", valor: 0.0 }, { texto: "No se sabe", valor: 0.0 }] },
-      { id: 17, peso: 4, pregunta: "¿Existe un proveedor alternativo viable en el mercado que cumpla lo esencial?", opciones: [{ texto: "Sí, hay varios equivalentes", valor: 1.0 }, { texto: "Sí, hay uno o dos, pero con diferencias relevantes", valor: 0.7 }, { texto: "Difícil: existen, pero no cumplen requisitos clave", valor: 0.3 }, { texto: "No existe alternativa viable", valor: 0.0 }] },
-      { id: 18, peso: 5, pregunta: "¿Cuál es el tiempo real estimado de reemplazo (evaluación + contrato + migración + puesta en marcha)?", opciones: [{ texto: "Menos de 1 mes", valor: 1.0 }, { texto: "1 a 3 meses", valor: 0.7 }, { texto: "3 a 6 meses", valor: 0.3 }, { texto: "Más de 6 meses", valor: 0.0 }] },
-      { id: 19, peso: 4, pregunta: "¿Cuál sería el impacto global del cambio de proveedor (operación, usuarios, clientes, formación, fallas esperables)?", opciones: [{ texto: "Bajo", valor: 1.0 }, { texto: "Medio", valor: 0.7 }, { texto: "Alto", valor: 0.3 }, { texto: "Crítico", valor: 0.0 }] },
-      { id: 20, peso: 5, pregunta: "Considerando todo lo anterior, ¿qué tan “atrapada” está la organización con este proveedor hoy?", opciones: [{ texto: "Baja dependencia (salida factible sin trauma)", valor: 1.0 }, { texto: "Media (salida posible con planificación)", valor: 0.7 }, { texto: "Alta (salida compleja, riesgo significativo)", valor: 0.3 }, { texto: "Crítica (salida impracticable en el corto plazo)", valor: 0.0 }] }
+      { id: 1, peso: 5, pregunta: "¿Qué tan crítico es este proveedor para la continuidad del negocio (según el proceso que soporta)?", opciones: [{ texto: "Crítico: detiene el core del negocio", valor: 0.0 }, { texto: "Alto: afecta fuertemente la operación", valor: 0.3 }, { texto: "Medio: afecta, pero se puede operar con ajustes", valor: 0.7 }, { texto: "Bajo: su caída casi no afecta", valor: 1.0 }, NA_OPTION] },
+      { id: 2, peso: 4, pregunta: "¿Qué tipo de proceso soporta principalmente este proveedor?", opciones: [{ texto: "Core del negocio (servicio principal/ingresos)", valor: 0.0 }, { texto: "Operativo (operación diaria, producción/servicio)", valor: 0.3 }, { texto: "Financiero (pagos, facturación, contabilidad)", valor: 0.5 }, { texto: "Comercial (ventas, marketing, atención comercial)", valor: 0.7 }, { texto: "Soporte (RRHH, administración, soporte interno)", valor: 1.0 }, NA_OPTION] },
+      { id: 3, peso: 4, pregunta: "Si este proveedor falla, ¿impacta directamente a clientes externos?", opciones: [{ texto: "Sí, impacto crítico (no se puede atender/operar)", valor: 0.0 }, { texto: "Sí, impacto relevante (caída parcial del servicio)", valor: 0.3 }, { texto: "Sí, impacto menor (molestias, retrasos)", valor: 0.7 }, { texto: "No, solo impacto interno", valor: 1.0 }, NA_OPTION] },
+      { id: 4, peso: 3, pregunta: "¿El proveedor es necesario para cumplir obligaciones legales/contractuales del negocio?", opciones: [{ texto: "Sí, de forma directa (sin esto no se cumple)", valor: 0.0 }, { texto: "Sí, de forma indirecta (apoya evidencias/operación)", valor: 0.5 }, { texto: "No", valor: 1.0 }, NA_OPTION] },
+      { id: 5, peso: 5, pregunta: "Si el proveedor deja de prestar el servicio hoy, ¿qué ocurre operativamente?", opciones: [{ texto: "Se detiene totalmente", valor: 0.0 }, { texto: "Se detiene parcialmente", valor: 0.3 }, { texto: "Se degrada, pero se mantiene funcionando", valor: 0.7 }, { texto: "No afecta la operación", valor: 1.0 }, NA_OPTION] },
+      { id: 6, peso: 4, pregunta: "¿Existe un workaround manual o alternativo que permita seguir operando?", opciones: [{ texto: "No existe", valor: 0.0 }, { texto: "Sí, pero toma más de 24 horas activarlo", valor: 0.2 }, { texto: "Sí, parcial (solo funciones básicas)", valor: 0.5 }, { texto: "Sí, completo e inmediato", valor: 1.0 }, NA_OPTION] },
+      { id: 7, peso: 5, pregunta: "¿Cuánto tiempo máximo puede operar la organización sin este proveedor antes de un impacto grave?", opciones: [{ texto: "Menos de 24 horas / no puede operar", valor: 0.0 }, { texto: "1 a 6 días", valor: 0.3 }, { texto: "7 a 30 días", valor: 0.7 }, { texto: "Más de 30 días", valor: 1.0 }, NA_OPTION] },
+      { id: 8, peso: 4, pregunta: "¿La caída de este proveedor genera efectos en cascada (otros procesos/sistemas se ven afectados)?", opciones: [{ texto: "Sí, efectos severos (cadena completa)", valor: 0.0 }, { texto: "Sí, efectos relevantes", valor: 0.3 }, { texto: "Sí, efectos limitados", valor: 0.7 }, { texto: "No", valor: 1.0 }, NA_OPTION] },
+      { id: 9, peso: 5, pregunta: "¿Los datos gestionados por el proveedor pueden exportarse completa y fácilmente en formatos estándar (CSV/JSON/SQL u otros)?", opciones: [{ texto: "No: no es exportable o no está disponible", valor: 0.0 }, { texto: "Difícil: exporta, pero en formato propietario / poco usable", valor: 0.2 }, { texto: "Parcial: exporta, pero falta parte relevante", valor: 0.5 }, { texto: "Sí, exportación completa y estándar", valor: 1.0 }, NA_OPTION] },
+      { id: 10, peso: 4, pregunta: "En caso de migrar, ¿la organización puede reconstruir su operación con esos datos (sin perder trazabilidad/histórico crítico)?", opciones: [{ texto: "No, se pierde información clave", valor: 0.0 }, { texto: "Parcial: con pérdida menor aceptable", valor: 0.5 }, { texto: "Sí, sin pérdida relevante", valor: 1.0 }, NA_OPTION] },
+      { id: 11, peso: 4, pregunta: "¿El proveedor está integrado con otros sistemas críticos (ERP, correo, identidad, pagos, APIs)?", opciones: [{ texto: "Sí, integraciones críticas y complejas (dependencia alta)", valor: 0.0 }, { texto: "Sí, varias integraciones relevantes", valor: 0.4 }, { texto: "Sí, 1–2 integraciones simples", valor: 0.8 }, { texto: "No", valor: 1.0 }, NA_OPTION] },
+      { id: 12, peso: 4, pregunta: "¿Existe documentación técnica suficiente para migrar (integraciones, flujos, APIs, configuración, dependencias)?", opciones: [{ texto: "No existe o está desactualizada", valor: 0.0 }, { texto: "Parcial, requiere trabajo adicional", valor: 0.5 }, { texto: "Sí, completa y actualizada", valor: 1.0 }, NA_OPTION] },
+      { id: 13, peso: 4, pregunta: "¿El contrato contempla una cláusula de salida (término, rescisión) clara y ejecutable?", opciones: [{ texto: "No existe", valor: 0.0 }, { texto: "Sí, pero con restricciones importantes", valor: 0.5 }, { texto: "Sí, clara y ejecutable", valor: 1.0 }, NA_OPTION] },
+      { id: 14, peso: 3, pregunta: "¿Existen penalidades económicas por término anticipado que desincentiven salir?", opciones: [{ texto: "Sí, altas (impide salida práctica)", valor: 0.0 }, { texto: "Sí, medias (impacto relevante)", valor: 0.4 }, { texto: "Sí, bajas (monto asumible)", valor: 0.8 }, { texto: "No", valor: 1.0 }, NA_OPTION] },
+      { id: 15, peso: 3, pregunta: "¿Cuál es el plazo mínimo de aviso para terminar el contrato?", opciones: [{ texto: "Más de 90 días", valor: 0.2 }, { texto: "30 a 90 días", valor: 0.6 }, { texto: "Menos de 30 días", valor: 1.0 }, NA_OPTION] },
+      { id: 16, peso: 4, pregunta: "¿El contrato regula explícitamente devolución/portabilidad/eliminación de datos al término?", opciones: [{ texto: "No (no está regulado)", valor: 0.0 }, { texto: "Parcial (menciona, pero sin detalle)", valor: 0.5 }, { texto: "Sí, claro y específico (plazos y formato)", valor: 1.0 }, NA_OPTION] },
+      { id: 17, peso: 4, pregunta: "¿Existe un proveedor alternativo viable en el mercado que cumpla lo esencial?", opciones: [{ texto: "No existe alternativa viable", valor: 0.0 }, { texto: "Difícil: existen, pero no cumplen requisitos clave", valor: 0.3 }, { texto: "Sí, hay uno o dos, pero con diferencias relevantes", valor: 0.7 }, { texto: "Sí, hay varios equivalentes", valor: 1.0 }, NA_OPTION] },
+      { id: 18, peso: 5, pregunta: "¿Cuál es el tiempo real estimado de reemplazo (evaluación + contrato + migración + puesta en marcha)?", opciones: [{ texto: "Más de 6 meses", valor: 0.0 }, { texto: "3 a 6 meses", valor: 0.3 }, { texto: "1 a 3 meses", valor: 0.7 }, { texto: "Menos de 1 mes", valor: 1.0 }, NA_OPTION] },
+      { id: 19, peso: 4, pregunta: "¿Cuál sería el impacto global del cambio de proveedor (operación, usuarios, clientes, formación, fallas esperables)?", opciones: [{ texto: "Crítico", valor: 0.0 }, { texto: "Alto", valor: 0.3 }, { texto: "Medio", valor: 0.7 }, { texto: "Bajo", valor: 1.0 }, NA_OPTION] },
+      { id: 20, peso: 5, pregunta: "Considerando todo lo anterior, ¿qué tan “atrapada” está la organización con este proveedor hoy?", opciones: [{ texto: "Crítica (salida impracticable en el corto plazo)", valor: 0.0 }, { texto: "Alta (salida compleja, riesgo significativo)", valor: 0.3 }, { texto: "Media (salida posible con planificación)", valor: 0.7 }, { texto: "Baja (salida factible sin trauma)", valor: 1.0 }, NA_OPTION] }
     ]
   },
   {
@@ -199,23 +405,23 @@ export const MODULES: ModuleData[] = [
     description: 'Identificación de riesgos derivados de la gestión del talento y roles clave.',
     icon: 'Users',
     questions: [
-      { id: 1, peso: 5, pregunta: "Considerando la operación real del negocio, ¿qué tan crítico es este rol para que los procesos esenciales funcionen sin interrupción?", opciones: [{ texto: "Bajo: su ausencia no afecta procesos esenciales", valor: 1.0 }, { texto: "Medio: afecta, pero se puede operar con ajustes menores", valor: 0.7 }, { texto: "Alto: afecta fuertemente y genera retrasos o degradación relevante", valor: 0.3 }, { texto: "Crítico: su ausencia detiene total o parcialmente procesos clave", valor: 0.0 }] },
-      { id: 2, peso: 4, pregunta: "¿Qué tipo de procesos del negocio dependen principalmente de este rol (por frecuencia e impacto)?", opciones: [{ texto: "Soporte (administración, RRHH, soporte interno)", valor: 1.0 }, { texto: "Operativo (operación diaria, producción/servicio)", valor: 0.3 }, { texto: "Comercial (ventas, atención, marketing)", valor: 0.5 }, { texto: "Financiero (facturación, pagos, contabilidad)", valor: 0.5 }, { texto: "Core del negocio (servicio principal/ingresos)", valor: 0.0 }] },
-      { id: 3, peso: 3, pregunta: "Tipo de relación del rol con la organización (según vínculo y control operativo):", opciones: [{ texto: "Interno (empleado/función interna)", valor: 1.0 }, { texto: "Proveedor (depende de contrato con tercero)", valor: 0.7 }, { texto: "Externo crítico (tercero clave, difícil de sustituir en corto plazo)", valor: 0.0 }] },
-      { id: 4, peso: 5, pregunta: "¿El “cómo se hace” el trabajo de este rol está documentado de forma que otra persona pueda ejecutarlo sin improvisar?", opciones: [{ texto: "Sí, documentación completa, clara y actualizada", valor: 1.0 }, { texto: "Parcial: existe documentación, pero incompleta o desactualizada", valor: 0.5 }, { texto: "No: no existe documentación o no es utilizable en la práctica", valor: 0.0 }, { texto: "No aplica: el rol no requiere procedimientos repetibles", valor: 1.0 }] },
-      { id: 5, peso: 5, pregunta: "Si este rol quedara ausente mañana, ¿otra persona podría asumirlo sin apoyo directo del titular?", opciones: [{ texto: "Sí, inmediatamente (misma calidad y ritmo de trabajo)", valor: 1.0 }, { texto: "Sí, pero requiere apoyo inicial o tutoría", valor: 0.5 }, { texto: "No, no hay capacidad interna para asumirlo", valor: 0.0 }] },
-      { id: 6, peso: 4, pregunta: "¿Cuánto del desempeño del rol depende de experiencia personal, “memoria histórica” o conocimiento tácito (no escrito)?", opciones: [{ texto: "Bajo: la mayor parte está estandarizada", valor: 1.0 }, { texto: "Medio: hay componentes clave que dependen de la experiencia", valor: 0.5 }, { texto: "Alto: el rol depende principalmente de conocimiento tácito", valor: 0.2 }, { texto: "Crítico: sin esa experiencia no se puede operar correctamente", valor: 0.0 }] },
-      { id: 7, peso: 5, pregunta: "¿Este rol posee accesos privilegiados a sistemas críticos (administración, configuración, seguridad, plataformas SaaS, infraestructura)?", opciones: [{ texto: "No, no posee accesos privilegiados", valor: 1.0 }, { texto: "Sí, pero existen reemplazos o mecanismos de recuperación", valor: 0.5 }, { texto: "Sí, y son accesos únicos o difíciles de recuperar", valor: 0.0 }, { texto: "No se sabe / no está controlado", valor: 0.0 }] },
-      { id: 8, peso: 5, pregunta: "¿Este rol es el único que administra, configura o mantiene algún sistema crítico para el negocio?", opciones: [{ texto: "No: hay al menos dos personas con capacidad real", valor: 1.0 }, { texto: "Parcial: hay respaldo, pero limitado o incompleto", valor: 0.5 }, { texto: "Sí: es el único con capacidad real de administración", valor: 0.0 }] },
-      { id: 9, peso: 4, pregunta: "¿Los accesos y credenciales asociados a este rol están controlados, documentados y pueden reasignarse sin riesgos ni demoras excesivas?", opciones: [{ texto: "Sí: existe control, registro y procedimiento de reasignación", valor: 1.0 }, { texto: "Parcial: hay control, pero incompleto o informal", valor: 0.5 }, { texto: "No: no hay control/documentación o no es reasignable en la práctica", valor: 0.0 }, { texto: "No aplica", valor: 1.0 }] },
-      { id: 10, peso: 5, pregunta: "Si este rol no estuviera disponible, ¿qué ocurriría con el/los procesos que soporta en la operación real (no teórica)?", opciones: [{ texto: "No ocurre impacto relevante", valor: 1.0 }, { texto: "El proceso se ralentiza o se degrada, pero continúa", valor: 0.7 }, { texto: "El proceso se detiene parcialmente", valor: 0.3 }, { texto: "El proceso se detiene totalmente", valor: 0.0 }] },
-      { id: 11, peso: 4, pregunta: "¿Existe dependencia exclusiva o dominante de este rol para ejecutar tareas críticas (decisiones, operation, validaciones, autorizaciones, continuidad)?", opciones: [{ texto: "No: la dependencia está distribuida", valor: 1.0 }, { texto: "Parcial: hay tareas críticas donde este rol es dominante", valor: 0.5 }, { texto: "Sí: el rol es indispensable para tareas críticas", valor: 0.0 }] },
-      { id: 12, peso: 4, pregunta: "En condiciones reales, ¿cuánto tiempo tomaría recuperar la operación sin este rol (aunque sea en modo degradado)?", opciones: [{ texto: "Menos de 1 día", valor: 1.0 }, { texto: "Entre 1 y 3 días", valor: 0.6 }, { texto: "Más de 3 días", valor: 0.2 }, { texto: "No se puede estimar / nunca se ha evaluado", valor: 0.0 }] },
-      { id: 13, peso: 4, pregunta: "¿Existe un plan formal para cubrir la ausencia del rol (reemplazo, turnos, back-up, externalización temporal)?", opciones: [{ texto: "Sí, plan formal y vigente", valor: 1.0 }, { texto: "Parcial: existe idea/plan informal", valor: 0.5 }, { texto: "No existe ningún plan", valor: 0.0 }] },
-      { id: 14, peso: 4, pregunta: "¿Existe personal identificado (por nombre/rol) que pueda asumir este rol en caso de ausencia, con responsabilidades definidas?", opciones: [{ texto: "Sí, al menos 2 personas identificadas y preparadas", valor: 1.0 }, { texto: "Parcial: existe 1 persona o respaldo incompleto", valor: 0.5 }, { texto: "No existe personal identificado", valor: 0.0 }] },
-      { id: 15, peso: 4, pregunta: "¿Cuánto tiempo real tomaría formar adecuadamente a un reemplazo para operar con autonomía?", opciones: [{ texto: "Menos de 1 semana", valor: 1.0 }, { texto: "Entre 1 y 4 semanas", valor: 0.6 }, { texto: "Más de 1 mes", valor: 0.2 }, { texto: "No se sabe / no se ha estimado", valor: 0.0 }] },
-      { id: 16, peso: 3, pregunta: "¿Se ha probado alguna vez la sustitución temporal (vacaciones, licencia, rotación) verificando que el rol puede ser cubierto sin crisis?", opciones: [{ texto: "Sí, probado con éxito", valor: 1.0 }, { texto: "Sí, probado pero con fallas relevantes", valor: 0.5 }, { texto: "No, nunca se ha probado", valor: 0.0 }] },
-      { id: 17, peso: 5, pregunta: "Considerando conocimiento, accesos e impacto operativo, ¿qué nivel de dependencia tiene hoy la organización respecto de este rol?", opciones: [{ texto: "Baja (reemplazo factible sin trauma)", valor: 1.0 }, { texto: "Media (reemplazo posible con planificación)", valor: 0.7 }, { texto: "Alta (reemplazo complejo, riesgo significativo)", valor: 0.3 }, { texto: "Crítica (ausencia provoca crisis operativa)", valor: 0.0 }] }
+      { id: 1, peso: 5, pregunta: "Considerando la operación real del negocio, ¿qué tan crítico es este rol para que los procesos esenciales funcionen sin interrupción?", opciones: [{ texto: "Crítico: su ausencia detiene total o parcialmente procesos clave", valor: 0.0 }, { texto: "Alto: afecta fuertemente y genera retrasos o degradación relevante", valor: 0.3 }, { texto: "Medio: afecta, pero se puede operar con ajustes menores", valor: 0.7 }, { texto: "Bajo: su ausencia no afecta procesos esenciales", valor: 1.0 }, NA_OPTION] },
+      { id: 2, peso: 4, pregunta: "¿Qué tipo de procesos del negocio dependen principalmente de este rol (por frecuencia e impacto)?", opciones: [{ texto: "Core del negocio (servicio principal/ingresos)", valor: 0.0 }, { texto: "Operativo (operación diaria, producción/servicio)", valor: 0.3 }, { texto: "Financiero (facturación, pagos, contabilidad)", valor: 0.5 }, { texto: "Comercial (ventas, atención, marketing)", valor: 0.7 }, { texto: "Soporte (administración, RRHH, soporte interno)", valor: 1.0 }, NA_OPTION] },
+      { id: 3, peso: 3, pregunta: "Tipo de relación del rol con la organización (según vínculo y control operativo):", opciones: [{ texto: "Externo crítico (tercero clave, difícil de sustituir en corto plazo)", valor: 0.0 }, { texto: "Proveedor (depende de contrato con tercero)", valor: 0.7 }, { texto: "Interno (empleado/función interna)", valor: 1.0 }, NA_OPTION] },
+      { id: 4, peso: 5, pregunta: "¿El “cómo se hace” el trabajo de este rol está documentado de forma que otra persona pueda ejecutarlo sin improvisar?", opciones: [{ texto: "No: no existe documentación o no es utilizable en la práctica", valor: 0.0 }, { texto: "Parcial: existe documentación, pero incompleta o desactualizada", valor: 0.5 }, { texto: "Sí, documentación completa, clara y actualizada", valor: 1.0 }, NA_OPTION] },
+      { id: 5, peso: 5, pregunta: "Si este rol quedara ausente mañana, ¿otra persona podría asumirlo sin apoyo directo del titular?", opciones: [{ texto: "No, no hay capacidad interna para asumirlo", valor: 0.0 }, { texto: "Sí, pero requiere apoyo inicial o tutoría", valor: 0.5 }, { texto: "Sí, inmediatamente (misma calidad y ritmo de trabajo)", valor: 1.0 }, NA_OPTION] },
+      { id: 6, peso: 4, pregunta: "¿Cuánto del desempeño del rol depende de experiencia personal, “memoria histórica” o conocimiento tácito (no escrito)?", opciones: [{ texto: "Crítico: sin esa experiencia no se puede operar correctamente", valor: 0.0 }, { texto: "Alto: el rol depende principalmente de conocimiento tácito", valor: 0.2 }, { texto: "Medio: hay componentes clave que dependen de la experiencia", valor: 0.5 }, { texto: "Bajo: la mayor parte está estandarizada", valor: 1.0 }, NA_OPTION] },
+      { id: 7, peso: 5, pregunta: "¿Este rol posee accesos privilegiados a sistemas críticos (administración, configuración, seguridad, plataformas SaaS, infraestructura)?", opciones: [{ texto: "Sí, y son accesos únicos o difíciles de recuperar", valor: 0.0 }, { texto: "Sí, pero existen reemplazos o mecanismos de recuperación", valor: 0.5 }, { texto: "No, no posee accesos privilegiados", valor: 1.0 }, NA_OPTION] },
+      { id: 8, peso: 5, pregunta: "¿Este rol es el único que administra, configura o mantiene algún sistema crítico para el negocio?", opciones: [{ texto: "Sí: es el único con capacidad real de administración", valor: 0.0 }, { texto: "Parcial: hay respaldo, pero limitado o incompleto", valor: 0.5 }, { texto: "No: hay al menos dos personas con capacidad real", valor: 1.0 }, NA_OPTION] },
+      { id: 9, peso: 4, pregunta: "¿Los accesos y credenciales asociados a este rol están controlados, documentados y pueden reasignarse sin riesgos ni demoras excesivas?", opciones: [{ texto: "No: no hay control/documentación o no es reasignable en la práctica", valor: 0.0 }, { texto: "Parcial: hay control, pero incompleto o informal", valor: 0.5 }, { texto: "Sí: existe control, registro y procedimiento de reasignación", valor: 1.0 }, NA_OPTION] },
+      { id: 10, peso: 5, pregunta: "Si este rol no estuviera disponible, ¿qué ocurriría con el/los procesos que soporta en la operación real (no teórica)?", opciones: [{ texto: "El proceso se detiene totalmente", valor: 0.0 }, { texto: "El proceso se detiene parcialmente", valor: 0.3 }, { texto: "El proceso se ralentiza o se degrada, pero continúa", valor: 0.7 }, { texto: "No ocurre impacto relevante", valor: 1.0 }, NA_OPTION] },
+      { id: 11, peso: 4, pregunta: "¿Existe dependencia exclusiva o dominante de este rol para ejecutar tareas críticas (decisiones, operation, validaciones, autorizaciones, continuidad)?", opciones: [{ texto: "Sí: el rol es indispensable para tareas críticas", valor: 0.0 }, { texto: "Parcial: hay tareas críticas donde este rol es dominante", valor: 0.5 }, { texto: "No: la dependencia está distribuida", valor: 1.0 }, NA_OPTION] },
+      { id: 12, peso: 4, pregunta: "En condiciones reales, ¿cuánto tiempo tomaría recuperar la operación sin este rol (aunque sea en modo degradado)?", opciones: [{ texto: "Más de 3 días", valor: 0.2 }, { texto: "Entre 1 y 3 días", valor: 0.6 }, { texto: "Menos de 1 día", valor: 1.0 }, NA_OPTION] },
+      { id: 13, peso: 4, pregunta: "¿Existe un plan formal para cubrir la ausencia del rol (reemplazo, turnos, back-up, externalización temporal)?", opciones: [{ texto: "No existe ningún plan", valor: 0.0 }, { texto: "Parcial: existe idea/plan informal", valor: 0.5 }, { texto: "Sí, plan formal y vigente", valor: 1.0 }, NA_OPTION] },
+      { id: 14, peso: 4, pregunta: "¿Existe personal identificado (por nombre/rol) que pueda asumir este rol en caso de ausencia, con responsabilidades definidas?", opciones: [{ texto: "No existe personal identificado", valor: 0.0 }, { texto: "Parcial: existe 1 persona o respaldo incompleto", valor: 0.5 }, { texto: "Sí, al menos 2 personas identificadas y preparadas", valor: 1.0 }, NA_OPTION] },
+      { id: 15, peso: 4, pregunta: "¿Cuánto tiempo real tomaría formar adecuadamente a un reemplazo para operar con autonomía?", opciones: [{ texto: "Más de 1 mes", valor: 0.2 }, { texto: "Entre 1 y 4 semanas", valor: 0.6 }, { texto: "Menos de 1 semana", valor: 1.0 }, NA_OPTION] },
+      { id: 16, peso: 3, pregunta: "¿Se ha probado alguna vez la sustitución temporal (vacaciones, licencia, rotación) verificando que el rol puede ser cubierto sin crisis?", opciones: [{ texto: "No, nunca se ha probado", valor: 0.0 }, { texto: "Sí, probado pero con fallas relevantes", valor: 0.5 }, { texto: "Sí, probado con éxito", valor: 1.0 }, NA_OPTION] },
+      { id: 17, peso: 5, pregunta: "Considerando conocimiento, accesos e impacto operativo, ¿qué nivel de dependencia tiene hoy la organización respecto de este rol?", opciones: [{ texto: "Crítica (ausencia provoca crisis operativa)", valor: 0.0 }, { texto: "Alta (reemplazo complejo, riesgo significativo)", valor: 0.3 }, { texto: "Media (reemplazo posible con planificación)", valor: 0.7 }, { texto: "Baja (reemplazo factible sin trauma)", valor: 1.0 }, NA_OPTION] }
     ]
   }
 ];

@@ -83,14 +83,40 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, onAnswer, onBa
     return <span className="text-slate-400 font-bold text-[8px]">FILE</span>;
   };
 
-  // Helper to get color scale class based on compliance value
   const getColorClass = (value: number, isSelected: boolean) => {
-    if (value === -1) return isSelected ? 'bg-slate-600 text-white border-slate-700' : 'bg-slate-50 border-slate-100 text-slate-500 hover:bg-slate-100';
-    if (value >= 1.0) return isSelected ? 'bg-emerald-600 text-white border-emerald-700 shadow-emerald-200' : 'bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100';
-    if (value >= 0.75) return isSelected ? 'bg-blue-600 text-white border-blue-700 shadow-blue-200' : 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100';
-    if (value >= 0.5) return isSelected ? 'bg-amber-500 text-white border-amber-600 shadow-amber-200' : 'bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100';
-    if (value >= 0.25) return isSelected ? 'bg-orange-500 text-white border-orange-600 shadow-orange-200' : 'bg-orange-50 text-orange-700 border-orange-100 hover:bg-orange-100';
-    return isSelected ? 'bg-red-600 text-white border-red-700 shadow-red-200' : 'bg-red-50 text-red-700 border-red-100 hover:bg-red-100';
+    // No aplica: Slate/Gray
+    if (value === -1) {
+      return isSelected 
+        ? 'bg-slate-700 text-white border-slate-800 ring-2 ring-slate-100' 
+        : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100 hover:border-slate-300';
+    }
+    
+    // Gradiente semáforo según valor de cumplimiento/madurez (0 a 1)
+    if (value >= 0.9) {
+      return isSelected 
+        ? 'bg-emerald-600 text-white border-emerald-700 shadow-lg shadow-emerald-100 ring-2 ring-emerald-50' 
+        : 'bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100 hover:border-emerald-200';
+    }
+    if (value >= 0.7) {
+      return isSelected 
+        ? 'bg-lime-500 text-white border-lime-600 shadow-lg shadow-lime-100 ring-2 ring-lime-50' 
+        : 'bg-lime-50 text-lime-700 border-lime-100 hover:bg-lime-100 hover:border-lime-200';
+    }
+    if (value >= 0.4) {
+      return isSelected 
+        ? 'bg-amber-500 text-white border-amber-600 shadow-lg shadow-amber-100 ring-2 ring-amber-50' 
+        : 'bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100 hover:border-amber-200';
+    }
+    if (value >= 0.2) {
+      return isSelected 
+        ? 'bg-orange-500 text-white border-orange-600 shadow-lg shadow-orange-100 ring-2 ring-orange-50' 
+        : 'bg-orange-50 text-orange-700 border-orange-100 hover:bg-orange-100 hover:border-orange-200';
+    }
+    
+    // Valor crítico (0)
+    return isSelected 
+      ? 'bg-red-600 text-white border-red-700 shadow-lg shadow-red-100 ring-2 ring-red-50' 
+      : 'bg-red-50 text-red-700 border-red-100 hover:bg-red-100 hover:border-red-200';
   };
 
   const auditLevels = [
@@ -124,7 +150,7 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, onAnswer, onBa
           const hasCustomOptions = q.opciones && q.opciones.length > 0;
 
           return (
-            <div key={q.id} className={`bg-white rounded-3xl p-8 shadow-sm border transition-all duration-300 ${currentAnswer ? 'border-slate-200' : 'border-slate-100 hover:border-indigo-100'}`}>
+            <div key={q.id} className={`bg-white rounded-3xl p-8 shadow-sm border transition-all duration-300 ${currentAnswer ? 'border-slate-200' : 'border-slate-100 hover:border-indigo-50'}`}>
               <div className="flex items-start space-x-6">
                 <div className="flex-shrink-0 flex flex-col items-center">
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm transition-colors ${currentAnswer ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-slate-100 text-slate-400'}`}>
