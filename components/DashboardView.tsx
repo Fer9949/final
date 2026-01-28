@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { GRCState, ModuleId } from '../types';
 import { MODULES, ICONS } from '../constants';
-import { calculateModuleScore, getScoreLevel1000 } from '../utils/scoring';
+import { calculateModuleScore, getScoreLevel1000, getTopModuleGaps, GapFinding } from '../utils/scoring';
 import { GoogleGenAI } from "@google/genai";
 
 interface DashboardViewProps {
@@ -123,6 +123,12 @@ const ScoreLegend: React.FC = () => {
   );
 };
 
+const GapBadge: React.FC<{ value: number }> = ({ value }) => {
+  if (value === 0) return <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-md text-[9px] font-black uppercase">Crítico</span>;
+  if (value < 0.4) return <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-md text-[9px] font-black uppercase">Alto</span>;
+  return <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-md text-[9px] font-black uppercase">Medio</span>;
+};
+
 const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, onGoHome }) => {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -143,7 +149,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, on
       score: calculateModuleScore(module.id, state.answers, MODULES),
       total: module.questions.length,
       answered: Object.keys(state.answers).filter(k => k.startsWith(module.id)).length,
-      color: moduleColors[module.id]
+      color: moduleColors[module.id],
+      gaps: getTopModuleGaps(module.id as ModuleId, state.answers, MODULES, 5)
     }));
   }, [state.answers]);
 
@@ -277,13 +284,13 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, on
         </div>
       </div>
 
-      {/* Module Cards Grid */}
+      {/* Module Cards Grid - Simplified (Gaps removed to avoid duplication) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {scores.map((s, i) => (
           <div 
             key={s.id} 
             onClick={() => onSwitchModule(s.id as ModuleId)}
-            className="group relative bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer overflow-hidden"
+            className="group relative bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col"
           >
             {/* Background Blob */}
             <div 
@@ -315,7 +322,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, on
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 group-hover:text-indigo-400 transition-colors">Ver Detalles</span>
             </div>
             
-            <div className="w-full bg-slate-50 rounded-full h-3.5 overflow-hidden p-0.5 border border-slate-100">
+            <div className="w-full bg-slate-50 rounded-full h-3.5 overflow-hidden p-0.5 border border-slate-100 mb-2">
                <div 
                  className="h-full rounded-full transition-all duration-1000 ease-out shadow-sm" 
                  style={{ width: `${s.score}%`, backgroundColor: s.color }}
@@ -323,6 +330,61 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, on
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Hallazgos Críticos Consolidados Section (Mapa de Brechas de Resiliencia) */}
+      <div className="bg-white rounded-[3.5rem] p-12 shadow-[0_20px_60px_rgba(0,0,0,0.05)] border border-slate-100">
+         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+            <div>
+              <h4 className="text-2xl font-black text-slate-900 tracking-tight mb-2 uppercase">Mapa de Brechas de Resiliencia</h4>
+              <p className="text-slate-400 text-sm font-medium tracking-wide italic">Concentración de los 5 principales fallos detectados por cada dimensión auditable.</p>
+            </div>
+            <div className="flex items-center gap-3">
+               <div className="flex -space-x-3">
+                  {scores.map(s => (
+                    <div key={s.id} className="w-10 h-10 rounded-full border-4 border-white shadow-sm flex items-center justify-center text-white" style={{ backgroundColor: s.color }}>
+                      <span className="text-[8px] font-black">{s.id}</span>
+                    </div>
+                  ))}
+               </div>
+            </div>
+         </div>
+
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {scores.map(s => (
+              <div key={s.id} className="space-y-6">
+                 <div className="flex items-center gap-4 border-b border-slate-50 pb-4">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm" style={{ backgroundColor: s.color }}>
+                       {ICONS[MODULES.find(m => m.id === s.id)?.icon || 'Layout']}
+                    </div>
+                    <h5 className="text-sm font-black text-slate-800 uppercase tracking-tight">{s.name.split(':')[0]}</h5>
+                 </div>
+                 <div className="space-y-4">
+                    {s.gaps.length > 0 ? (
+                      s.gaps.map((gap, idx) => (
+                        <div key={idx} className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-md transition-all group/gap-item">
+                           <div className="flex justify-between items-start mb-2">
+                              <GapBadge value={gap.value} />
+                              <span className="text-[9px] font-black text-slate-300 group-hover/gap-item:text-indigo-400">FINDING-{gap.questionId}</span>
+                           </div>
+                           <p className="text-[11px] text-slate-600 font-bold leading-relaxed mb-3">{gap.text}</p>
+                           <div className="flex items-center gap-2">
+                              <div className="w-full bg-slate-200 h-1 rounded-full overflow-hidden">
+                                 <div className="h-full bg-red-500" style={{ width: `${(1 - gap.value) * 100}%` }}></div>
+                              </div>
+                              <span className="text-[9px] font-black text-slate-400">{Math.round((1 - gap.value) * 100)}% Riesgo</span>
+                           </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-8 text-center bg-slate-50/30 rounded-3xl border border-dashed border-slate-100">
+                         <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">Postura Sólida ✨</p>
+                      </div>
+                    )}
+                 </div>
+              </div>
+            ))}
+         </div>
       </div>
 
       {/* Futuristic AI Analysis Section */}
