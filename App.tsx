@@ -12,6 +12,7 @@ const STORAGE_KEY = 'grc_master_state';
 const defaultState: GRCState = {
   answers: {},
   activeModule: 'HOME',
+  observations: {},
   metadata: {
     processType: PROCESS_TYPES[0],
     processName: '',
@@ -28,7 +29,7 @@ const loadFromStorage = (): GRCState => {
     if (!saved) return defaultState;
     const parsed = JSON.parse(saved) as GRCState;
     // Always reset to HOME so user confirms metadata on reload
-    return { ...parsed, activeModule: 'HOME' };
+    return { ...parsed, observations: parsed.observations || {}, activeModule: 'HOME' };
   } catch {
     return defaultState;
   }
@@ -68,6 +69,26 @@ const App: React.FC = () => {
         [`${answer.moduleId}_${answer.questionId}`]: answer
       }
     }));
+  };
+
+  const handleSetObservation = (key: string, text: string) => {
+    setState(prev => ({
+      ...prev,
+      observations: {
+        ...prev.observations,
+        [key]: text
+      }
+    }));
+  };
+
+  const handleSaveDimension = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const moduleName = currentModule?.name || 'Dimensión';
+      showToast(`✓ "${moduleName}" guardada correctamente.`, 'success');
+    } catch {
+      showToast('Error al guardar. Verifique el espacio disponible.', 'error');
+    }
   };
 
   const updateMetadata = (key: keyof EvaluationMetadata, value: string) => {
@@ -133,8 +154,8 @@ const App: React.FC = () => {
             <img src="/logo.png" className="h-full w-auto brightness-0 invert" alt="Logo" />
           </div>
           <div>
-            <h1 className="font-black text-xl leading-none tracking-tight text-slate-800">GRC MASTER</h1>
-            <p className="text-indigo-600 text-[10px] mt-1.5 tracking-[0.2em] font-black uppercase">Enterprise v2.0</p>
+            <h1 className="font-black text-sm leading-tight tracking-tight text-slate-800">Sistema de Evaluación<br/>Cumplimiento Ciberseg.</h1>
+            <p className="text-indigo-600 text-[9px] mt-1 tracking-[0.15em] font-black uppercase">y Protección de Datos v2.0</p>
           </div>
         </div>
 
@@ -281,7 +302,10 @@ const App: React.FC = () => {
               <ModuleView
                 module={currentModule}
                 answers={state.answers}
+                observations={state.observations}
                 onAnswer={handleSetAnswer}
+                onObservation={handleSetObservation}
+                onSaveDimension={handleSaveDimension}
                 onBack={() => setState(s => ({ ...s, activeModule: 'DASHBOARD' }))}
                 onGoHome={() => setState(s => ({...s, activeModule: 'HOME'}))}
                 showToast={showToast}

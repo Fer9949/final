@@ -53,4 +53,5 @@ export interface GRCState {
   answers: Record<string, Answer>; // key: moduleId_questionId
   activeModule: ModuleId | 'DASHBOARD' | 'HOME';
   metadata: EvaluationMetadata;
+  observations: Record<string, string>; // key: moduleId_questionId
 }

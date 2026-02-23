@@ -24,8 +24,8 @@ const HomeView: React.FC<HomeViewProps> = ({ metadata, onChange, onStart, hasExi
         <div className="md:w-1/2 p-10 bg-gradient-to-br from-slate-900 to-indigo-950 text-white flex flex-col">
           <div className="mb-10">
             <img src="/logo.png" alt="Ciberlex Logo" className="h-16 w-auto mb-4 brightness-0 invert" />
-            <h1 className="text-3xl font-black tracking-tight leading-none">GRC MASTER V. 2.0</h1>
-            <p className="text-indigo-400 font-bold text-xs uppercase tracking-widest mt-2">Enterprise Edition</p>
+            <h1 className="text-2xl font-black tracking-tight leading-tight">Sistema de Evaluación de Cumplimiento de Ciberseguridad y Protección de Datos</h1>
+            <p className="text-indigo-400 font-bold text-xs uppercase tracking-widest mt-2">Enterprise Edition v2.0</p>
           </div>
 
           <div className="space-y-6 flex-1">
