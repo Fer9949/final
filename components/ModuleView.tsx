@@ -1,8 +1,9 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { ModuleData, Answer, FileEvidence } from '../types';
 import { ICONS } from '../constants';
 import { ToastData } from './Toast';
+import { supabase } from '../lib/supabase';
 
 interface ModuleViewProps {
   module: ModuleData;
@@ -18,6 +19,7 @@ interface ModuleViewProps {
 
 const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, observations, onAnswer, onObservation, onSaveDimension, onBack, onGoHome, showToast }) => {
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const [uploadingQuestions, setUploadingQuestions] = useState<Set<number>>(new Set());
   const completedCount = Object.keys(answers).filter(k => k.startsWith(module.id)).length;
   const progressPercent = (completedCount / module.questions.length) * 100;
 
@@ -42,24 +44,49 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, observations, 
       return;
     }
 
+    setUploadingQuestions(prev => new Set(prev).add(qId));
     const newEvidences: FileEvidence[] = [];
+
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const base64 = await fileToBase64(file);
+      const path = `${module.id}_${qId}/${Date.now()}_${file.name}`;
+
+      const { data, error } = await supabase.storage
+        .from('evidencias')
+        .upload(path, file, { upsert: false });
+
+      if (error) {
+        showToast(`Error al subir "${file.name}": ${error.message}`, 'error');
+        continue;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('evidencias')
+        .getPublicUrl(data.path);
+
       newEvidences.push({
         id: Math.random().toString(36).substr(2, 9),
         name: file.name,
         type: file.type,
         size: file.size,
         lastModified: file.lastModified,
-        data: base64
+        data: publicUrl
       });
     }
 
-    onAnswer({
-      ...currentAnswer,
-      evidence: [...(currentAnswer.evidence || []), ...newEvidences]
+    setUploadingQuestions(prev => {
+      const next = new Set(prev);
+      next.delete(qId);
+      return next;
     });
+
+    if (newEvidences.length > 0) {
+      onAnswer({
+        ...currentAnswer,
+        evidence: [...(currentAnswer.evidence || []), ...newEvidences]
+      });
+      showToast(`${newEvidences.length} archivo(s) subido(s) correctamente.`, 'success');
+    }
     e.target.value = '';
   };
 
@@ -69,15 +96,6 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, observations, 
     onAnswer({
       ...currentAnswer,
       evidence: currentAnswer.evidence.filter(e => e.id !== evidenceId)
-    });
-  };
-
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
     });
   };
 
@@ -287,10 +305,20 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, observations, 
                       <button
                         type="button"
                         onClick={() => fileInputRefs.current[q.id]?.click()}
-                        className="flex items-center gap-2 text-indigo-700 font-bold text-xs bg-indigo-50 px-5 py-3 rounded-xl border-2 border-indigo-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm"
+                        disabled={uploadingQuestions.has(q.id)}
+                        className="flex items-center gap-2 text-indigo-700 font-bold text-xs bg-indigo-50 px-5 py-3 rounded-xl border-2 border-indigo-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                        Adjuntar Evidencia
+                        {uploadingQuestions.has(q.id) ? (
+                          <>
+                            <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            Subiendo...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                            Adjuntar Evidencia
+                          </>
+                        )}
                       </button>
                       <input
                         ref={(el) => { fileInputRefs.current[q.id] = el; }}
