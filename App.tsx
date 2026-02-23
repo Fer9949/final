@@ -120,11 +120,15 @@ const App: React.FC = () => {
   const handleExportPDF = () => {
     if (state.activeModule !== 'DASHBOARD') {
       const previousModule = state.activeModule;
-      setState(s => ({ ...s, activeModule: 'DASHBOARD' }));
-      setTimeout(() => {
-        window.print();
+
+      const restore = () => {
         setState(s => ({ ...s, activeModule: previousModule }));
-      }, 400);
+        window.removeEventListener('afterprint', restore);
+      };
+      window.addEventListener('afterprint', restore);
+
+      setState(s => ({ ...s, activeModule: 'DASHBOARD' }));
+      setTimeout(() => window.print(), 400);
     } else {
       window.print();
     }
