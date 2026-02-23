@@ -17,7 +17,7 @@ const NA_OPTION = { texto: "No aplica", valor: -1 };
 export const MODULES: ModuleData[] = [
   {
     id: 'ADN',
-    name: 'ADN: Dependencia Digital',
+    name: 'Dependencia del Proceso',
     description: 'Análisis de criticidad y mapa de dependencias tecnológicas, humanas y de terceros.',
     objetivo: 'Establecer el contexto de negocio, los niveles de criticidad y los umbrales de tolerancia del proceso. Este módulo actúa como la "brújula" del motor, configurando dinámicamente los pesos y los techos de score (Gates) según el impacto real en la operación.',
     icon: 'Network',
@@ -406,7 +406,7 @@ export const MODULES: ModuleData[] = [
   },
   {
     id: 'PEOPLE',
-    name: 'Personas (Dependencia de Personas)',
+    name: 'Dependencia Crítica de Personas',
     description: 'Identificación de riesgos derivados de la gestión del talento y roles clave.',
     objetivo: 'Identificar la dependencia de conocimiento crítico no documentado y roles exclusivos. Su fin es mitigar el "Punto Único de Falla Humano", asegurando que el proceso pueda ejecutarse ante la ausencia de personas clave mediante planes de sucesión y transferencia de know-how.',
     icon: 'Users',
