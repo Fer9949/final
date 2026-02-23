@@ -17,6 +17,23 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
     </style>
+    <style>
+        @media print {
+            /* Ocultar todo excepto el dashboard */
+            body > * { display: none !important; }
+            #root > * { display: none !important; }
+            aside { display: none !important; }
+            header { display: none !important; }
+            .flex.h-screen { display: block !important; }
+            main { display: block !important; overflow: visible !important; }
+            main > header { display: none !important; }
+            #dashboard-print-area { display: block !important; }
+            #dashboard-print-area * { display: revert !important; }
+            /* Ocultar botones dentro del dashboard */
+            button { display: none !important; }
+            @page { margin: 10mm; size: A4; }
+        }
+    </style>
 <script type="importmap">
 {
   "imports": {

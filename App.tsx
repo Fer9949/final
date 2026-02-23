@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { GRCState, Answer, ModuleId, EvaluationMetadata } from './types';
 import { MODULES, ICONS, PROCESS_TYPES } from './constants';
 import DashboardView from './components/DashboardView';
@@ -48,6 +48,17 @@ const App: React.FC = () => {
       }
     }));
   };
+
+  // ── LÓGICA EXPORTAR PDF ──
+  const handleExportPDF = useCallback(() => {
+    // Si no está en el dashboard, navegar primero y luego imprimir
+    if (state.activeModule !== 'DASHBOARD') {
+      setState(s => ({ ...s, activeModule: 'DASHBOARD' }));
+      setTimeout(() => window.print(), 400);
+    } else {
+      window.print();
+    }
+  }, [state.activeModule]);
 
   const currentModule = useMemo(() => {
     if (state.activeModule === 'HOME' || state.activeModule === 'DASHBOARD') return null;
@@ -191,7 +202,10 @@ const App: React.FC = () => {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
               INICIO
             </button>
-            <button className="px-6 py-3 bg-indigo-600 text-white rounded-xl text-xs font-black hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 flex items-center gap-3 active:scale-95">
+            <button
+              onClick={handleExportPDF}
+              className="px-6 py-3 bg-indigo-600 text-white rounded-xl text-xs font-black hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 flex items-center gap-3 active:scale-95"
+            >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
               EXPORTAR PDF
             </button>
@@ -200,7 +214,9 @@ const App: React.FC = () => {
 
         <div className="p-10 max-w-7xl mx-auto w-full">
           {state.activeModule === 'DASHBOARD' ? (
-            <DashboardView state={state} onSwitchModule={(id) => setState(s => ({...s, activeModule: id}))} onGoHome={() => setState(s => ({...s, activeModule: 'HOME'}))} />
+            <div id="dashboard-print-area">
+              <DashboardView state={state} onSwitchModule={(id) => setState(s => ({...s, activeModule: id}))} onGoHome={() => setState(s => ({...s, activeModule: 'HOME'}))} />
+            </div>
           ) : (
             currentModule && (
               <ModuleView 
