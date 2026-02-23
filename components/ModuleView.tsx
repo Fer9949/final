@@ -283,16 +283,16 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, observations, 
                         </div>
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Evidencias Adjuntas</span>
                       </div>
-                      <label className="cursor-pointer group flex items-center gap-2 text-indigo-600 font-black text-[10px] bg-indigo-50 px-4 py-2 rounded-xl border-2 border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                      <label className="relative overflow-hidden cursor-pointer flex items-center gap-2 text-indigo-700 font-bold text-xs bg-indigo-50 px-5 py-3 rounded-xl border-2 border-indigo-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm select-none">
                         <input
                           type="file"
                           multiple
                           accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-                          className="hidden"
+                          className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
                           onChange={(e) => handleFileUpload(q.id, e)}
                         />
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                        ADJUNTAR ARCHIVOS
+                        <svg className="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                        <span className="pointer-events-none">Adjuntar Evidencia</span>
                       </label>
                     </div>
 
