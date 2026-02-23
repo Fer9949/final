@@ -169,7 +169,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, on
       const prompt = `Analiza los siguientes resultados de una evaluación GRC y genera un resumen ejecutivo de 3 párrafos resaltando brechas críticas. Contexto: Proceso ${state.metadata.processName}. Resultados: ${scores.map(s => `${s.name}: ${s.score.toFixed(1)}%`).join(', ')}. Score Ejecutivo: ${Math.round((globalCompliance / 100) * 1000)}/1000.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.0-flash',
         contents: prompt
       });
       setAiAnalysis(response.text || "No se pudo generar el análisis.");
