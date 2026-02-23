@@ -239,7 +239,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, on
             <div className="absolute top-0 right-0 p-8 text-slate-100 group-hover:text-slate-200 transition-colors">
               <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
             </div>
-            <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] mb-8 text-center">Nivel de Defendibilidad Jurídica</h4>
+            <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] mb-8 text-center">Nivel de Riesgo en Ciberseguridad</h4>
             <GaugeIndicator score={globalCompliance} />
           </div>
           

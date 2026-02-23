@@ -406,7 +406,7 @@ export const MODULES: ModuleData[] = [
   },
   {
     id: 'PEOPLE',
-    name: 'Personas (Bus Factor Humano)',
+    name: 'Personas (Dependencia de Personas)',
     description: 'Identificación de riesgos derivados de la gestión del talento y roles clave.',
     objetivo: 'Identificar la dependencia de conocimiento crítico no documentado y roles exclusivos. Su fin es mitigar el "Punto Único de Falla Humano", asegurando que el proceso pueda ejecutarse ante la ausencia de personas clave mediante planes de sucesión y transferencia de know-how.',
     icon: 'Users',

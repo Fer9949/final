@@ -33,7 +33,7 @@ const HomeView: React.FC<HomeViewProps> = ({ metadata, onChange, onStart }) => {
               </h2>
               <div className="space-y-4 text-slate-300 text-sm leading-relaxed text-justify">
                 <p>
-                  El <strong>CIBERLEX GRC ENGINE v 2.0</strong> tiene como propósito central transformar la auditoría técnica y legal en una herramienta estratégica de decisión gerencial.
+                  El <strong>GRC Ciberseguridad y Protección de Datos</strong> tiene como propósito central transformar la auditoría técnica y legal en una herramienta estratégica de decisión gerencial.
                 </p>
                 <p>
                   Evalúa la resiliencia operacional y el nivel de cumplimiento normativo basándose en tres pilares: 
@@ -42,7 +42,7 @@ const HomeView: React.FC<HomeViewProps> = ({ metadata, onChange, onStart }) => {
                   <strong> Detección de Puntos de Falla Críticos</strong>.
                 </p>
                 <p>
-                  El resultado final proporciona un diagnóstico claro sobre el Estado Operacional y la Defendibilidad Jurídica de la organización.
+                  El resultado final proporciona un diagnóstico claro sobre el Estado Operacional y el Nivel de Riesgo en Ciberseguridad de la organización.
                 </p>
               </div>
             </div>
