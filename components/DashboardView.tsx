@@ -226,7 +226,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, on
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Audit Score</p>
                 <p className="text-3xl font-black text-white tabular-nums">{Math.round((globalCompliance / 100) * 1000)}<span className="text-indigo-500">.</span></p>
              </div>
-             <button onClick={onGoHome} className="w-14 h-14 bg-white/5 hover:bg-white/10 rounded-2xl flex items-center justify-center transition-all border border-white/10 text-white shadow-inner">
+             <button onClick={onGoHome} className="w-14 h-14 bg-white/5 hover:bg-white/10 rounded-2xl flex items-center justify-center transition-all border border-white/10 text-white shadow-inner print:hidden">
                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
              </button>
           </div>
@@ -321,7 +321,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, on
               <span className="text-4xl font-black text-slate-900 tabular-nums">
                 {Math.round(s.score)}<span className="text-xs text-slate-300 font-bold">%</span>
               </span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 group-hover:text-indigo-400 transition-colors">Ver Detalles</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 group-hover:text-indigo-400 transition-colors print:hidden">Ver Detalles</span>
             </div>
             
             <div className="w-full bg-slate-50 rounded-full h-3.5 overflow-hidden p-0.5 border border-slate-100 mb-2">

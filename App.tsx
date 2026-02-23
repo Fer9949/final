@@ -118,7 +118,16 @@ const App: React.FC = () => {
   };
 
   const handleExportPDF = () => {
-    window.print();
+    if (state.activeModule !== 'DASHBOARD') {
+      const previousModule = state.activeModule;
+      setState(s => ({ ...s, activeModule: 'DASHBOARD' }));
+      setTimeout(() => {
+        window.print();
+        setState(s => ({ ...s, activeModule: previousModule }));
+      }, 400);
+    } else {
+      window.print();
+    }
   };
 
   const currentModule = useMemo(() => {
