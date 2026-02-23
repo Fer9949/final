@@ -280,11 +280,14 @@ const App: React.FC = () => {
         const riskLabel = riskPct === 100 ? 'CRÍTICO' : riskPct >= 60 ? 'ALTO' : 'MEDIO';
         const riskColor = riskPct === 100 ? RED : riskPct >= 60 ? ORANGE : YELLOW;
 
-        // Calcular altura necesaria para este finding
-        // El texto ocupa el ancho central dejando espacio al badge izq y finding derecho
-        const textMaxW = CW - 22 - 28; // 22 para badge izq, 28 para finding derecho
+        // Layout: fila 1 = badge CRÍTICO (izq) + FINDING-X (der) en la misma línea
+        //         fila 2 = texto de la pregunta a ancho completo (sin competir con FINDING)
+        //         fila 3 = barra de riesgo + porcentaje
+        // Esto garantiza que FINDING nunca se superpone con el texto.
+        const textMaxW = CW - 4; // texto usa casi todo el ancho
         const lines = pdf.splitTextToSize(`${gap.text}`, textMaxW);
-        const neededH = 6 + lines.length * 4.5 + 6;
+        // altura: 7mm cabecera (badge+finding) + líneas de texto + 6mm barra
+        const neededH = 7 + lines.length * 4.5 + 7;
         checkY(neededH);
 
         // Fondo alternado
@@ -294,7 +297,7 @@ const App: React.FC = () => {
         pdf.setLineWidth(0.2);
         pdf.roundedRect(M, y, CW, neededH - 2, 1, 1, 'S');
 
-        // Badge de riesgo (izquierda)
+        // ── FILA 1: Badge de riesgo (izquierda) + FINDING-X (derecha) ──
         pdf.setFillColor(...riskColor);
         pdf.roundedRect(M + 2, y + 1.5, 16, 5, 1, 1, 'F');
         pdf.setFontSize(5.5);
@@ -302,20 +305,20 @@ const App: React.FC = () => {
         pdf.setTextColor(...WHITE);
         pdf.text(riskLabel, M + 10, y + 5, { align: 'center' });
 
-        // Número de finding (derecha, alineado con el badge)
+        // FINDING-X en la misma fila, extremo derecho — NO hay texto largo en esta fila
         pdf.setFontSize(6);
         pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(...SLATE);
         pdf.text(`FINDING-${gap.questionId}`, M + CW - 2, y + 5, { align: 'right' });
 
-        // Texto de la pregunta (en columna central, no llega hasta el finding)
+        // ── FILA 2: Texto de la pregunta (empieza DEBAJO de la fila del badge) ──
         pdf.setFontSize(7);
         pdf.setFont('helvetica', 'normal');
         pdf.setTextColor(...DARK);
-        pdf.text(lines, M + 20, y + 5.5);
+        pdf.text(lines, M + 2, y + 9.5); // y+9.5 = debajo del badge
 
-        // Barra de riesgo
-        const barY = y + 4.5 + lines.length * 4.5;
+        // ── FILA 3: Barra de riesgo ──
+        const barY = y + 8 + lines.length * 4.5;
         pdf.setFillColor(226, 232, 240);
         pdf.roundedRect(M + 2, barY, CW - 30, 2, 0.5, 0.5, 'F');
         pdf.setFillColor(...riskColor);
@@ -371,7 +374,7 @@ const App: React.FC = () => {
             <img src="https://i.ibb.co/LhyM66Q/ciberlex-logo.png" className="h-full w-auto brightness-0 invert" alt="Logo" />
           </div>
           <div>
-            <h1 className="font-black text-xl leading-none tracking-tight text-slate-800">GRC MASTER</h1>
+            <h1 className="font-black text-xl leading-none tracking-tight text-slate-800">GRC Ciberseguridad y Protección de Datos</h1>
             <p className="text-indigo-600 text-[10px] mt-1.5 tracking-[0.2em] font-black uppercase">Enterprise v2.0</p>
           </div>
         </div>
