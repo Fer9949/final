@@ -19,7 +19,7 @@ export const MODULES: ModuleData[] = [
     id: 'ADN',
     name: 'ADN: Dependencia Digital',
     description: 'Análisis de criticidad y mapa de dependencias tecnológicas, humanas y de terceros.',
-    objetivo: 'Establecer el contexto de negocio, los niveles de criticidad y los umbrales de tolerancia del proceso. Este módulo actúa como la "brújula" del motor, configurando dinámicamente los pesos y los techos de score (Gates) según el impacto real en la operación.',
+    objetivo: 'Establecer el contexto del negocio: nivel de criticidad, impacto y tolerancia al riesgo del proceso evaluado. Estos parámetros base determinan cómo se interpretan los resultados del resto de los módulos.',
     icon: 'Network',
     questions: [
       { 
@@ -74,7 +74,7 @@ export const MODULES: ModuleData[] = [
         pregunta: "¿Cuál es el tiempo objetivo de recuperación (RTO) máximo definido antes de que la interrupción cause un daño irreversible o financiero inasumible?", 
         opciones: [
           { texto: "Diferible: Más de una semana", valor: 1.0 },
-          { texto: "Necesario: Entre 1 y 3 días", valor: 0.6 },
+          { texto: "Recuperable: Entre 1 y 3 días", valor: 0.6 },
           { texto: "Urgente: Entre 4 y 24 horas", valor: 0.3 },
           { texto: "Crítico: Menos de 4 horas", valor: 0.0 },
           NA_OPTION
@@ -251,8 +251,8 @@ export const MODULES: ModuleData[] = [
   {
     id: 'CIBER',
     name: 'Ciberseguridad (CIS Controls IG1)',
-    description: 'Auditoría exhaustiva de los 18 Controles Críticos de CIS (Implementation Group 1) desglosados en 43 salvaguardas esenciales.',
-    objetivo: 'Evaluar la robustez de la higiene técnica y la madurez defensiva. Se basa en los controles internacionales más efectivos para mitigar ataques de alto impacto (Ransomware/Phishing), asegurando que la infraestructura digital sea capaz de resistir y recuperarse de incidentes.',
+    description: 'Auditoría de los 18 Controles Críticos de Seguridad CIS (Grupo de Implementación 1), organizados en 43 salvaguardas esenciales.',
+    objetivo: 'Evaluar qué tan bien protegida está la infraestructura digital contra los ataques más comunes (ransomware, phishing, robo de credenciales) y la capacidad de la organización para detectar, contener y recuperarse ante incidentes.',
     icon: 'ShieldCheck',
     questions: [
       { id: 1, peso: 4, pregunta: "¿La organización mantiene un inventario completo, actualizado y verificable de todos los activos (estaciones, servidores, dispositivos de red, móviles y otros), identificando tipo, responsable, criticidad y ubicación, y lo revisa periódicamente?" },
@@ -304,7 +304,7 @@ export const MODULES: ModuleData[] = [
     id: 'LEGAL',
     name: 'Protección de Datos (Ley 21.719)',
     description: 'Cumplimiento normativo del nuevo marco legal chileno de protección de la vida privada y datos personales.',
-    objetivo: 'Medir el grado de defendibilidad jurídica ante el tratamiento de datos personales. Busca acreditar la licitud, el cumplimiento de derechos de titulares y la capacidad de notificación oportuna, protegiendo a la organización ante multas severas y riesgos reputacionales.',
+    objetivo: 'Evaluar si la organización cumple con la Ley 21.719 al recopilar y usar datos personales, y si puede demostrarlo ante una fiscalización. Cubre: base legal del tratamiento, derechos de las personas, medidas de seguridad y capacidad de notificación ante brechas.',
     icon: 'Scale',
     questions: [
       { id: 1, peso: 8, pregunta: "¿La organización puede acreditar con documentación que cada tratamiento de datos personales es lícito, identificando la base legal que lo ampara, y mantiene esa información disponible ante fiscalizaciones o solicitudes de titulares?" },
@@ -344,8 +344,8 @@ export const MODULES: ModuleData[] = [
   {
     id: 'INFRA',
     name: 'Continuidad Operacional (Infraestructura)',
-    description: 'Resiliencia de la infraestructura física, ambiental y eléctrica para soportar la operación crítica.',
-    objetivo: 'Garantizar la resiliencia del entorno físico y lógico que soporta el proceso. Evalúa la redundancia eléctrica, climatización, seguridad física de salas de datos y conectividad, asegurando que el negocio no se detenga por fallas en los cimientos tecnológicos.',
+    description: 'Resiliencia de la infraestructura física: seguridad de acceso, climatización, respaldo eléctrico y conectividad.',
+    objetivo: 'Verificar que los equipos, instalaciones y redes que soportan el proceso estén protegidos contra fallas físicas. Evalúa: sala de datos, energía (UPS/generador), climatización, conectividad redundante y respaldo de grabaciones de seguridad.',
     icon: 'Server',
     questions: [
       { id: 1, peso: 8, pregunta: "¿La organización dispone de una sala dedicada y físicamente delimitada para alojar servidores, equipos de red, firewall, sistemas de respaldo y NVR/DVR, separada de oficinas, bodegas u otras áreas no controladas?" },
@@ -378,8 +378,8 @@ export const MODULES: ModuleData[] = [
   {
     id: 'VENDOR',
     name: 'Proveedores (Cadena de Suministro)',
-    description: 'Análisis de dependencia estratégica, financiera y técnica de socios tecnológicos externos.',
-    objetivo: 'Analizar los riesgos en la cadena de suministro digital y la dependencia de terceros (SaaS/Cloud). El foco está en asegurar la portabilidad de los datos, la existencia de cláusulas de salida claras y la continuidad del servicio si el proveedor crítico falla.',
+    description: 'Análisis del nivel de dependencia y riesgo asociado a proveedores externos de servicios tecnológicos.',
+    objetivo: 'Evaluar qué tan expuesta está la organización ante la falla o salida de un proveedor clave. Analiza: criticidad del servicio, posibilidad de migrar los datos, cláusulas contractuales de salida y tiempo real de reemplazo.',
     icon: 'Truck',
     questions: [
       { id: 1, peso: 5, pregunta: "¿Qué tan crítico es este proveedor para la continuidad del negocio (según el proceso que soporta)?", opciones: [{ texto: "Crítico: detiene el core del negocio", valor: 0.0 }, { texto: "Alto: afecta fuertemente la operación", valor: 0.3 }, { texto: "Medio: afecta, pero se puede operar con ajustes", valor: 0.7 }, { texto: "Bajo: su caída casi no afecta", valor: 1.0 }, NA_OPTION] },
@@ -387,7 +387,7 @@ export const MODULES: ModuleData[] = [
       { id: 3, peso: 4, pregunta: "Si este proveedor falla, ¿impacta directamente a clientes externos?", opciones: [{ texto: "Sí, impacto crítico (no se puede atender/operar)", valor: 0.0 }, { texto: "Sí, impacto relevante (caída parcial del servicio)", valor: 0.3 }, { texto: "Sí, impacto menor (molestias, retrasos)", valor: 0.7 }, { texto: "No, solo impacto interno", valor: 1.0 }, NA_OPTION] },
       { id: 4, peso: 3, pregunta: "¿El proveedor es necesario para cumplir obligaciones legales/contractuales del negocio?", opciones: [{ texto: "Sí, de forma directa (sin esto no se cumple)", valor: 0.0 }, { texto: "Sí, de forma indirecta (apoya evidencias/operación)", valor: 0.5 }, { texto: "No", valor: 1.0 }, NA_OPTION] },
       { id: 5, peso: 5, pregunta: "Si el proveedor deja de prestar el servicio hoy, ¿qué ocurre operativamente?", opciones: [{ texto: "Se detiene totalmente", valor: 0.0 }, { texto: "Se detiene parcialmente", valor: 0.3 }, { texto: "Se degrada, pero se mantiene funcionando", valor: 0.7 }, { texto: "No afecta la operación", valor: 1.0 }, NA_OPTION] },
-      { id: 6, peso: 4, pregunta: "¿Existe un workaround manual o alternativo que permita seguir operando?", opciones: [{ texto: "No existe", valor: 0.0 }, { texto: "Sí, pero toma más de 24 horas activarlo", valor: 0.2 }, { texto: "Sí, parcial (solo funciones básicas)", valor: 0.5 }, { texto: "Sí, completo e inmediato", valor: 1.0 }, NA_OPTION] },
+      { id: 6, peso: 4, pregunta: "¿Existe una alternativa manual u operativa que permita seguir funcionando si el proveedor no está disponible?", opciones: [{ texto: "No existe ninguna alternativa", valor: 0.0 }, { texto: "Sí, pero toma más de 24 horas activarla", valor: 0.2 }, { texto: "Sí, parcial (solo funciones básicas)", valor: 0.5 }, { texto: "Sí, completa e inmediata", valor: 1.0 }, NA_OPTION] },
       { id: 7, peso: 5, pregunta: "¿Cuánto tiempo máximo puede operar la organización sin este proveedor antes de un impacto grave?", opciones: [{ texto: "Menos de 24 horas / no puede operar", valor: 0.0 }, { texto: "1 a 6 días", valor: 0.3 }, { texto: "7 a 30 días", valor: 0.7 }, { texto: "Más de 30 días", valor: 1.0 }, NA_OPTION] },
       { id: 8, peso: 4, pregunta: "¿La caída de este proveedor genera efectos en cascada (otros procesos/sistemas se ven afectados)?", opciones: [{ texto: "Sí, efectos severos (cadena completa)", valor: 0.0 }, { texto: "Sí, efectos relevantes", valor: 0.3 }, { texto: "Sí, efectos limitados", valor: 0.7 }, { texto: "No", valor: 1.0 }, NA_OPTION] },
       { id: 9, peso: 5, pregunta: "¿Los datos gestionados por el proveedor pueden exportarse completa y fácilmente en formatos estándar (CSV/JSON/SQL u otros)?", opciones: [{ texto: "No: no es exportable o no está disponible", valor: 0.0 }, { texto: "Difícil: exporta, pero en formato propietario / poco usable", valor: 0.2 }, { texto: "Parcial: exporta, pero falta parte relevante", valor: 0.5 }, { texto: "Sí, exportación completa y estándar", valor: 1.0 }, NA_OPTION] },
@@ -407,16 +407,16 @@ export const MODULES: ModuleData[] = [
   {
     id: 'PEOPLE',
     name: 'Personas (Bus Factor Humano)',
-    description: 'Identificación de riesgos derivados de la gestión del talento y roles clave.',
-    objetivo: 'Identificar la dependencia de conocimiento crítico no documentado y roles exclusivos. Su fin es mitigar el "Punto Único de Falla Humano", asegurando que el proceso pueda ejecutarse ante la ausencia de personas clave mediante planes de sucesión y transferencia de know-how.',
+    description: 'Identificación de personas clave cuya ausencia podría detener o degradar la operación.',
+    objetivo: 'Detectar si la organización depende de una o pocas personas para funcionar. El objetivo es asegurar que ningún rol sea indispensable: que exista documentación, respaldo y planes de continuidad ante la ausencia de cualquier persona clave.',
     icon: 'Users',
     questions: [
       { id: 1, peso: 5, pregunta: "Considerando la operación real del negocio, ¿qué tan crítico es este rol para que los procesos esenciales funcionen sin interrupción?", opciones: [{ texto: "Crítico: su ausencia detiene total o parcialmente procesos clave", valor: 0.0 }, { texto: "Alto: afecta fuertemente y genera retrasos o degradación relevante", valor: 0.3 }, { texto: "Medio: afecta, pero se puede operar con ajustes menores", valor: 0.7 }, { texto: "Bajo: su ausencia no afecta procesos esenciales", valor: 1.0 }, NA_OPTION] },
       { id: 2, peso: 4, pregunta: "¿Qué tipo de procesos del negocio dependen principalmente de este rol (por frecuencia e impacto)?", opciones: [{ texto: "Core del negocio (servicio principal/ingresos)", valor: 0.0 }, { texto: "Operativo (operación diaria, producción/servicio)", valor: 0.3 }, { texto: "Financiero (facturación, pagos, contabilidad)", valor: 0.5 }, { texto: "Comercial (ventas, atención, marketing)", valor: 0.7 }, { texto: "Soporte (administración, RRHH, soporte interno)", valor: 1.0 }, NA_OPTION] },
       { id: 3, peso: 3, pregunta: "¿Cuál es el tipo de vínculo que tiene este rol con la organización?", opciones: [{ texto: "Externo crítico (tercero clave, difícil de sustituir en el corto plazo)", valor: 0.0 }, { texto: "Proveedor (depende de contrato con tercero)", valor: 0.7 }, { texto: "Interno (empleado o función interna)", valor: 1.0 }, NA_OPTION] },
-      { id: 4, peso: 5, pregunta: "¿El “cómo se hace” el trabajo de este rol está documentado de forma que otra persona pueda ejecutarlo sin improvisar?", opciones: [{ texto: "No: no existe documentación o no es utilizable en la práctica", valor: 0.0 }, { texto: "Parcial: existe documentación, pero incompleta o desactualizada", valor: 0.5 }, { texto: "Sí, documentación completa, clara y actualizada", valor: 1.0 }, NA_OPTION] },
+      { id: 4, peso: 5, pregunta: "¿Existe documentación clara de cómo ejecutar este rol, de forma que otra persona pueda asumir las tareas sin depender del titular?", opciones: [{ texto: "No: no existe documentación o no es utilizable en la práctica", valor: 0.0 }, { texto: "Parcial: existe documentación, pero incompleta o desactualizada", valor: 0.5 }, { texto: "Sí, documentación completa, clara y actualizada", valor: 1.0 }, NA_OPTION] },
       { id: 5, peso: 5, pregunta: "Si este rol quedara ausente mañana, ¿otra persona podría asumirlo sin apoyo directo del titular?", opciones: [{ texto: "No, no hay capacidad interna para asumirlo", valor: 0.0 }, { texto: "Sí, pero requiere apoyo inicial o tutoría", valor: 0.5 }, { texto: "Sí, inmediatamente (misma calidad y ritmo de trabajo)", valor: 1.0 }, NA_OPTION] },
-      { id: 6, peso: 4, pregunta: "¿Cuánto del desempeño del rol depende de experiencia personal, “memoria histórica” o conocimiento tácito (no escrito)?", opciones: [{ texto: "Crítico: sin esa experiencia no se puede operar correctamente", valor: 0.0 }, { texto: "Alto: el rol depende principalmente de conocimiento tácito", valor: 0.2 }, { texto: "Medio: hay componentes clave que dependen de la experiencia", valor: 0.5 }, { texto: "Bajo: la mayor parte está estandarizada", valor: 1.0 }, NA_OPTION] },
+      { id: 6, peso: 4, pregunta: "¿En qué medida el desempeño del rol depende de experiencia o conocimiento personal que no está documentado ni traspasado a otros?", opciones: [{ texto: "Crítico: sin esa experiencia no se puede operar correctamente", valor: 0.0 }, { texto: "Alto: el rol depende principalmente de conocimiento tácito", valor: 0.2 }, { texto: "Medio: hay componentes clave que dependen de la experiencia", valor: 0.5 }, { texto: "Bajo: la mayor parte está estandarizada", valor: 1.0 }, NA_OPTION] },
       { id: 7, peso: 5, pregunta: "¿Este rol posee accesos privilegiados a sistemas críticos (administración, configuración, seguridad, plataformas SaaS, infraestructura)?", opciones: [{ texto: "Sí, y son accesos únicos o difíciles de recuperar", valor: 0.0 }, { texto: "Sí, pero existen reemplazos o mecanismos de recuperación", valor: 0.5 }, { texto: "No, no posee accesos privilegiados", valor: 1.0 }, NA_OPTION] },
       { id: 8, peso: 5, pregunta: "¿Este rol es el único que administra, configura o mantiene algún sistema crítico para el negocio?", opciones: [{ texto: "Sí: es el único con capacidad real de administración", valor: 0.0 }, { texto: "Parcial: hay respaldo, pero limitado o incompleto", valor: 0.5 }, { texto: "No: hay al menos dos personas con capacidad real", valor: 1.0 }, NA_OPTION] },
       { id: 9, peso: 4, pregunta: "¿Los accesos y credenciales asociados a este rol están controlados, documentados y pueden reasignarse sin riesgos ni demoras excesivas?", opciones: [{ texto: "No: no hay control/documentación o no es reasignable en la práctica", valor: 0.0 }, { texto: "Parcial: hay control, pero incompleto o informal", valor: 0.5 }, { texto: "Sí: existe control, registro y procedimiento de reasignación", valor: 1.0 }, NA_OPTION] },
@@ -427,7 +427,7 @@ export const MODULES: ModuleData[] = [
       { id: 14, peso: 4, pregunta: "¿Existe personal identificado (por nombre/rol) que pueda asumir este rol en caso de ausencia, con responsabilidades definidas?", opciones: [{ texto: "No existe personal identificado", valor: 0.0 }, { texto: "Parcial: existe 1 persona o respaldo incompleto", valor: 0.5 }, { texto: "Sí, al menos 2 personas identificadas y preparadas", valor: 1.0 }, NA_OPTION] },
       { id: 15, peso: 4, pregunta: "¿Cuánto tiempo real tomaría formar adecuadamente a un reemplazo para operar con autonomía?", opciones: [{ texto: "Más de 1 mes", valor: 0.2 }, { texto: "Entre 1 y 4 semanas", valor: 0.6 }, { texto: "Menos de 1 semana", valor: 1.0 }, NA_OPTION] },
       { id: 16, peso: 3, pregunta: "¿Se ha probado alguna vez la sustitución temporal (vacaciones, licencia, rotación) verificando que el rol puede ser cubierto sin crisis?", opciones: [{ texto: "No, nunca se ha probado", valor: 0.0 }, { texto: "Sí, probado pero con fallas relevantes", valor: 0.5 }, { texto: "Sí, probado con éxito", valor: 1.0 }, NA_OPTION] },
-      { id: 17, peso: 5, pregunta: "Considerando conocimiento, accesos e impacto operativo, ¿qué nivel de dependencia tiene hoy la organización respecto de este rol?", opciones: [{ texto: "Crítica (ausencia provoca crisis operativa)", valor: 0.0 }, { texto: "Alta (reemplazo complejo, riesgo significativo)", valor: 0.3 }, { texto: "Media (reemplazo posible con planificación)", valor: 0.7 }, { texto: "Baja (reemplazo factible sin trauma)", valor: 1.0 }, NA_OPTION] }
+      { id: 17, peso: 5, pregunta: "Considerando conocimiento, accesos e impacto operativo, ¿qué tan dependiente es la organización de este rol hoy?", opciones: [{ texto: "Crítica (ausencia provoca crisis operativa)", valor: 0.0 }, { texto: "Alta (reemplazo complejo, riesgo significativo)", valor: 0.3 }, { texto: "Media (reemplazo posible con planificación)", valor: 0.7 }, { texto: "Baja (reemplazo factible sin trauma)", valor: 1.0 }, NA_OPTION] }
     ]
   }
 ];
