@@ -56,60 +56,75 @@ const App: React.FC = () => {
     // Asegurarse de estar en el dashboard
     if (state.activeModule !== 'DASHBOARD') {
       setState(s => ({ ...s, activeModule: 'DASHBOARD' }));
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 600));
     }
 
     const element = document.getElementById('dashboard-print-area');
     if (!element) return;
 
     try {
+      // Capturar todo el contenido del dashboard (scroll completo)
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#f8fafc',
-        scrollY: -window.scrollY,
+        scrollX: 0,
+        scrollY: 0,
+        width: element.scrollWidth,
+        height: element.scrollHeight,
         windowWidth: element.scrollWidth,
         windowHeight: element.scrollHeight,
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      // Formato carta (Letter): 215.9mm x 279.4mm
+      const MARGIN = 15; // mm de margen en todos los lados
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: 'a4',
+        format: 'letter',
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = imgWidth / imgHeight;
-      const pageRatio = pdfWidth / pdfHeight;
+      const pageW = pdf.internal.pageSize.getWidth();   // 215.9mm
+      const pageH = pdf.internal.pageSize.getHeight();  // 279.4mm
 
-      let finalWidth = pdfWidth;
-      let finalHeight = pdfWidth / ratio;
+      // Área útil dentro de los márgenes
+      const contentW = pageW - MARGIN * 2;
+      const contentH = pageH - MARGIN * 2;
 
-      // Si el contenido es más alto que una página, paginar
-      if (finalHeight <= pdfHeight) {
-        pdf.addImage(imgData, 'PNG', 0, 0, finalWidth, finalHeight);
-      } else {
-        // Paginar el contenido
-        const pageHeightInPx = (pdfHeight / pdfWidth) * imgWidth;
-        let yOffset = 0;
-        let page = 0;
-        while (yOffset < imgHeight) {
-          if (page > 0) pdf.addPage();
-          const sliceCanvas = document.createElement('canvas');
-          sliceCanvas.width = imgWidth;
-          sliceCanvas.height = Math.min(pageHeightInPx, imgHeight - yOffset);
-          const ctx = sliceCanvas.getContext('2d')!;
-          ctx.drawImage(canvas, 0, yOffset, imgWidth, sliceCanvas.height, 0, 0, imgWidth, sliceCanvas.height);
-          const sliceData = sliceCanvas.toDataURL('image/png');
-          const sliceHeight = (sliceCanvas.height / imgWidth) * pdfWidth;
-          pdf.addImage(sliceData, 'PNG', 0, 0, pdfWidth, sliceHeight);
-          yOffset += pageHeightInPx;
-          page++;
-        }
+      // Dimensiones del canvas en px
+      const canvasW = canvas.width;
+      const canvasH = canvas.height;
+
+      // Escala: cuántos px del canvas caben en 1mm del área útil
+      const pxPerMm = canvasW / contentW;
+      // Altura en px que representa una página de contenido útil
+      const pageHeightInPx = contentH * pxPerMm;
+
+      let yOffset = 0;
+      let pageNum = 0;
+
+      while (yOffset < canvasH) {
+        if (pageNum > 0) pdf.addPage('letter', 'portrait');
+
+        const sliceH = Math.min(pageHeightInPx, canvasH - yOffset);
+
+        // Crear canvas de la porción de esta página
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvasW;
+        sliceCanvas.height = sliceH;
+        const ctx = sliceCanvas.getContext('2d')!;
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, canvasW, sliceH);
+        ctx.drawImage(canvas, 0, yOffset, canvasW, sliceH, 0, 0, canvasW, sliceH);
+
+        const sliceData = sliceCanvas.toDataURL('image/png');
+        // Altura real en mm de esta porción dentro del área útil
+        const sliceHeightMm = (sliceH / pxPerMm);
+
+        pdf.addImage(sliceData, 'PNG', MARGIN, MARGIN, contentW, sliceHeightMm);
+
+        yOffset += pageHeightInPx;
+        pageNum++;
       }
 
       const processName = state.metadata.processName || 'GRC';
