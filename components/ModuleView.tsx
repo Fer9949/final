@@ -2,6 +2,7 @@
 import React from 'react';
 import { ModuleData, Answer, FileEvidence } from '../types';
 import { ICONS } from '../constants';
+import { ToastData } from './Toast';
 
 interface ModuleViewProps {
   module: ModuleData;
@@ -9,9 +10,10 @@ interface ModuleViewProps {
   onAnswer: (a: Answer) => void;
   onBack: () => void;
   onGoHome: () => void;
+  showToast: (message: string, type?: ToastData['type']) => void;
 }
 
-const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, onAnswer, onBack, onGoHome }) => {
+const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, onAnswer, onBack, onGoHome, showToast }) => {
   const completedCount = Object.keys(answers).filter(k => k.startsWith(module.id)).length;
   const progressPercent = (completedCount / module.questions.length) * 100;
 
@@ -32,7 +34,7 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, onAnswer, onBa
 
     const currentAnswer = answers[`${module.id}_${qId}`];
     if (!currentAnswer) {
-      alert("Por favor, seleccione una respuesta antes de cargar evidencia.");
+      showToast('Seleccione una respuesta antes de adjuntar evidencia.', 'warning');
       return;
     }
 

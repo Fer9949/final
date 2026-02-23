@@ -7,21 +7,23 @@ interface HomeViewProps {
   metadata: EvaluationMetadata;
   onChange: (key: keyof EvaluationMetadata, value: string) => void;
   onStart: () => void;
+  hasExistingData: boolean;
+  onNewEvaluation: () => void;
 }
 
-const HomeView: React.FC<HomeViewProps> = ({ metadata, onChange, onStart }) => {
+const HomeView: React.FC<HomeViewProps> = ({ metadata, onChange, onStart, hasExistingData, onNewEvaluation }) => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Background Decorative Element (Transparent Logo Placeholder Effect) */}
       <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none">
-         <img src="https://i.ibb.co/LhyM66Q/ciberlex-logo.png" alt="Watermark" className="w-[800px] h-auto grayscale" />
+         <img src="/logo.png" alt="Watermark" className="w-[800px] h-auto grayscale" />
       </div>
 
       <div className="max-w-4xl w-full bg-white rounded-[40px] shadow-2xl border border-slate-100 overflow-hidden relative z-10 flex flex-col md:flex-row">
         {/* Left Side: Info */}
         <div className="md:w-1/2 p-10 bg-gradient-to-br from-slate-900 to-indigo-950 text-white flex flex-col">
           <div className="mb-10">
-            <img src="https://i.ibb.co/LhyM66Q/ciberlex-logo.png" alt="Ciberlex Logo" className="h-16 w-auto mb-4 brightness-0 invert" />
+            <img src="/logo.png" alt="Ciberlex Logo" className="h-16 w-auto mb-4 brightness-0 invert" />
             <h1 className="text-3xl font-black tracking-tight leading-none">GRC MASTER V. 2.0</h1>
             <p className="text-indigo-400 font-bold text-xs uppercase tracking-widest mt-2">Enterprise Edition</p>
           </div>
@@ -126,12 +128,30 @@ const HomeView: React.FC<HomeViewProps> = ({ metadata, onChange, onStart }) => {
             </div>
           </div>
 
-          <button 
+          {hasExistingData && (
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
+              <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-xs font-black text-amber-700 uppercase tracking-wide mb-1">Sesión guardada</p>
+                <p className="text-[11px] text-amber-600">Hay respuestas de una evaluación anterior. Continúa o inicia una nueva.</p>
+              </div>
+              <button
+                onClick={onNewEvaluation}
+                className="text-[10px] font-black text-amber-700 hover:text-red-600 uppercase tracking-wide whitespace-nowrap transition-colors"
+              >
+                Nueva
+              </button>
+            </div>
+          )}
+
+          <button
             onClick={onStart}
             disabled={!metadata.processName || !metadata.evaluatorName}
-            className="mt-8 w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold py-4 rounded-2xl shadow-xl shadow-indigo-200 transition-all active:scale-95 flex items-center justify-center gap-3 group"
+            className="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl shadow-xl shadow-indigo-200 transition-all active:scale-95 flex items-center justify-center gap-3 group"
           >
-            Comenzar Auditoría
+            {hasExistingData ? 'Continuar Auditoría' : 'Comenzar Auditoría'}
             <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
           </button>
         </div>

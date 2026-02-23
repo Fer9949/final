@@ -1,0 +1,72 @@
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+
+interface Props {
+  children: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[GRC Master] Error no controlado:', error, info.componentStack);
+  }
+
+  handleReset = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+          <div className="max-w-md w-full bg-slate-900 rounded-[2.5rem] p-10 border border-slate-800 text-center shadow-2xl">
+            <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-black text-white mb-2 tracking-tight">Error Inesperado</h2>
+            <p className="text-slate-400 text-sm mb-2 leading-relaxed">
+              Ocurrió un error en la aplicación. Sus datos guardados no se han perdido.
+            </p>
+            {this.state.error && (
+              <p className="text-red-400 text-[11px] font-mono bg-slate-800 rounded-xl px-4 py-3 mb-6 text-left break-all">
+                {this.state.error.message}
+              </p>
+            )}
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={this.handleReset}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 rounded-2xl transition-all text-sm uppercase tracking-widest"
+              >
+                Reintentar
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full bg-white/5 hover:bg-white/10 text-slate-400 font-bold py-3 rounded-2xl transition-all text-sm"
+              >
+                Recargar Página
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export default ErrorBoundary;

@@ -5,11 +5,13 @@ import { GRCState, ModuleId } from '../types';
 import { MODULES, ICONS } from '../constants';
 import { calculateModuleScore, getScoreLevel1000, getTopModuleGaps, GapFinding } from '../utils/scoring';
 import { GoogleGenAI } from "@google/genai";
+import { ToastData } from './Toast';
 
 interface DashboardViewProps {
   state: GRCState;
   onSwitchModule: (id: ModuleId) => void;
   onGoHome: () => void;
+  showToast: (message: string, type?: ToastData['type']) => void;
 }
 
 // Utility to calculate precise SVG arc paths
@@ -129,7 +131,7 @@ const GapBadge: React.FC<{ value: number }> = ({ value }) => {
   return <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-md text-[9px] font-black uppercase">Medio</span>;
 };
 
-const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, onGoHome }) => {
+const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, onGoHome, showToast }) => {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -194,7 +196,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, on
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
           <div className="flex items-center space-x-8">
             <div className="w-24 h-24 bg-gradient-to-tr from-indigo-500 to-indigo-700 rounded-[2rem] flex items-center justify-center p-4 shadow-2xl shadow-indigo-500/40 rotate-3">
-               <img src="https://i.ibb.co/LhyM66Q/ciberlex-logo.png" className="w-full h-auto brightness-0 invert" alt="C" />
+               <img src="/logo.png" className="w-full h-auto brightness-0 invert" alt="C" />
             </div>
             <div>
               <div className="flex items-center gap-3 mb-2">
@@ -259,7 +261,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, on
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
                 <PolarGrid stroke="#f1f5f9" strokeWidth={2} />
-                <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 800, textTransform: 'uppercase' }} />
+                <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 800 }} />
                 <Radar
                   name="Cumplimiento"
                   dataKey="A"
