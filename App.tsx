@@ -159,7 +159,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f8fafc] font-inter">
+    <div id="app-wrapper" className="flex h-screen overflow-hidden bg-[#f8fafc] font-inter">
       {/* Sidebar */}
       <aside className="w-80 bg-white flex flex-col shadow-[1px_0_10px_rgba(0,0,0,0.05)] z-20 border-r border-slate-100 print:hidden">
         <div className="p-8 flex items-center space-x-4 border-b border-slate-50">

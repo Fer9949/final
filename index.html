@@ -26,18 +26,30 @@
             /* Reset page background */
             body { background-color: #ffffff !important; }
 
-            /* Make main content fill the page */
-            #main-content {
-                overflow: visible !important;
+            /* Remove the fixed-height scroll clipping from the app shell */
+            #app-wrapper {
+                display: block !important;
                 height: auto !important;
+                overflow: visible !important;
             }
 
-            /* Force page breaks before large sections */
-            .space-y-8 > div { page-break-inside: avoid; }
+            /* Make main content fill the page and show all scrolled content */
+            #main-content {
+                display: block !important;
+                overflow: visible !important;
+                height: auto !important;
+                width: 100% !important;
+                flex: none !important;
+            }
 
-            /* Remove shadows and rounded corners for print */
+            /* Let sections break naturally across pages */
+            .space-y-8 > div {
+                page-break-inside: auto;
+                break-inside: auto;
+            }
+
+            /* Ensure color backgrounds print */
             * {
-                box-shadow: none !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
