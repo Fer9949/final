@@ -56,75 +56,81 @@ const App: React.FC = () => {
     // Asegurarse de estar en el dashboard
     if (state.activeModule !== 'DASHBOARD') {
       setState(s => ({ ...s, activeModule: 'DASHBOARD' }));
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise(r => setTimeout(r, 700));
     }
 
     const element = document.getElementById('dashboard-print-area');
     if (!element) return;
 
     try {
-      // Capturar todo el contenido del dashboard (scroll completo)
+      // Capturar TODO el contenido del dashboard sin recortar
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         backgroundColor: '#f8fafc',
         scrollX: 0,
         scrollY: 0,
+        x: 0,
+        y: 0,
         width: element.scrollWidth,
         height: element.scrollHeight,
         windowWidth: element.scrollWidth,
         windowHeight: element.scrollHeight,
       });
 
-      // Formato carta (Letter): 215.9mm x 279.4mm
-      const MARGIN = 15; // mm de margen en todos los lados
+      // Hoja carta: 215.9 x 279.4 mm
+      // Márgenes: 15mm en los 4 lados (1.5 cm)
+      const MARGIN_MM = 15;
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'letter',
       });
 
-      const pageW = pdf.internal.pageSize.getWidth();   // 215.9mm
-      const pageH = pdf.internal.pageSize.getHeight();  // 279.4mm
+      const pageW_mm = pdf.internal.pageSize.getWidth();   // 215.9
+      const pageH_mm = pdf.internal.pageSize.getHeight();  // 279.4
+      const contentW_mm = pageW_mm - MARGIN_MM * 2;        // 185.9
+      const contentH_mm = pageH_mm - MARGIN_MM * 2;        // 249.4
 
-      // Área útil dentro de los márgenes
-      const contentW = pageW - MARGIN * 2;
-      const contentH = pageH - MARGIN * 2;
+      // Resolución: px por mm en el eje X
+      const pxPerMm = canvas.width / contentW_mm;
+      // Cuántos px del canvas entran en una página (eje Y)
+      const pageH_px = contentH_mm * pxPerMm;
 
-      // Dimensiones del canvas en px
-      const canvasW = canvas.width;
-      const canvasH = canvas.height;
+      const totalH_px = canvas.height;
+      let yPx = 0;
+      let pageIndex = 0;
 
-      // Escala: cuántos px del canvas caben en 1mm del área útil
-      const pxPerMm = canvasW / contentW;
-      // Altura en px que representa una página de contenido útil
-      const pageHeightInPx = contentH * pxPerMm;
+      while (yPx < totalH_px) {
+        if (pageIndex > 0) pdf.addPage('letter', 'portrait');
 
-      let yOffset = 0;
-      let pageNum = 0;
+        // Altura real de este slice (puede ser menor en la última página)
+        const sliceH_px = Math.min(pageH_px, totalH_px - yPx);
+        // Altura en mm proporcional al slice
+        const sliceH_mm = sliceH_px / pxPerMm;
 
-      while (yOffset < canvasH) {
-        if (pageNum > 0) pdf.addPage('letter', 'portrait');
-
-        const sliceH = Math.min(pageHeightInPx, canvasH - yOffset);
-
-        // Crear canvas de la porción de esta página
+        // Crear canvas del slice
         const sliceCanvas = document.createElement('canvas');
-        sliceCanvas.width = canvasW;
-        sliceCanvas.height = sliceH;
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = Math.ceil(sliceH_px);
         const ctx = sliceCanvas.getContext('2d')!;
         ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(0, 0, canvasW, sliceH);
-        ctx.drawImage(canvas, 0, yOffset, canvasW, sliceH, 0, 0, canvasW, sliceH);
+        ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+        ctx.drawImage(
+          canvas,
+          0, yPx,                          // origen en el canvas fuente
+          canvas.width, sliceH_px,         // tamaño del recorte
+          0, 0,                            // destino en el slice
+          sliceCanvas.width, sliceH_px     // tamaño en el slice
+        );
 
-        const sliceData = sliceCanvas.toDataURL('image/png');
-        // Altura real en mm de esta porción dentro del área útil
-        const sliceHeightMm = (sliceH / pxPerMm);
+        const imgData = sliceCanvas.toDataURL('image/png');
+        // Posicionar con margen de 15mm en X e Y
+        pdf.addImage(imgData, 'PNG', MARGIN_MM, MARGIN_MM, contentW_mm, sliceH_mm);
 
-        pdf.addImage(sliceData, 'PNG', MARGIN, MARGIN, contentW, sliceHeightMm);
-
-        yOffset += pageHeightInPx;
-        pageNum++;
+        yPx += pageH_px;
+        pageIndex++;
       }
 
       const processName = state.metadata.processName || 'GRC';
