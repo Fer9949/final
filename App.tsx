@@ -3,6 +3,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import { GRCState, Answer, ModuleId, EvaluationMetadata } from './types';
 import { MODULES, ICONS, PROCESS_TYPES } from './constants';
+import { calculateModuleScore, getTopModuleGaps, getScoreLevel1000 } from './utils/scoring';
 import DashboardView from './components/DashboardView';
 import ModuleView from './components/ModuleView';
 import HomeView from './components/HomeView';
@@ -52,9 +53,6 @@ const App: React.FC = () => {
 
   // ── LÓGICA EXPORTAR PDF (jsPDF puro, sin html2canvas) ──
   const handleExportPDF = useCallback(() => {
-    // Importar funciones de scoring
-    const { calculateModuleScore, getTopModuleGaps, getScoreLevel1000 } = require('./utils/scoring');
-
     const M = 15;          // margen 15mm = 1.5cm
     const PW = 215.9;      // ancho hoja carta mm
     const PH = 279.4;      // alto hoja carta mm
