@@ -281,7 +281,9 @@ const App: React.FC = () => {
         const riskColor = riskPct === 100 ? RED : riskPct >= 60 ? ORANGE : YELLOW;
 
         // Calcular altura necesaria para este finding
-        const lines = pdf.splitTextToSize(`${gap.text}`, CW - 30);
+        // El texto ocupa el ancho central dejando espacio al badge izq y finding derecho
+        const textMaxW = CW - 22 - 28; // 22 para badge izq, 28 para finding derecho
+        const lines = pdf.splitTextToSize(`${gap.text}`, textMaxW);
         const neededH = 6 + lines.length * 4.5 + 6;
         checkY(neededH);
 
@@ -292,7 +294,7 @@ const App: React.FC = () => {
         pdf.setLineWidth(0.2);
         pdf.roundedRect(M, y, CW, neededH - 2, 1, 1, 'S');
 
-        // Badge de riesgo
+        // Badge de riesgo (izquierda)
         pdf.setFillColor(...riskColor);
         pdf.roundedRect(M + 2, y + 1.5, 16, 5, 1, 1, 'F');
         pdf.setFontSize(5.5);
@@ -300,13 +302,13 @@ const App: React.FC = () => {
         pdf.setTextColor(...WHITE);
         pdf.text(riskLabel, M + 10, y + 5, { align: 'center' });
 
-        // Número de finding
+        // Número de finding (derecha, alineado con el badge)
         pdf.setFontSize(6);
         pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(...SLATE);
         pdf.text(`FINDING-${gap.questionId}`, M + CW - 2, y + 5, { align: 'right' });
 
-        // Texto de la pregunta
+        // Texto de la pregunta (en columna central, no llega hasta el finding)
         pdf.setFontSize(7);
         pdf.setFont('helvetica', 'normal');
         pdf.setTextColor(...DARK);
