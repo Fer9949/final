@@ -34,6 +34,14 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, observations, 
     });
   };
 
+  const readFileAsBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+
   const handleFileUpload = async (qId: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -56,7 +64,20 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, observations, 
         .upload(path, file, { upsert: false });
 
       if (error) {
-        showToast(`Error al subir "${file.name}": ${error.message}`, 'error');
+        // Fallback: store file as Base64 in local state when Supabase upload fails
+        try {
+          const base64 = await readFileAsBase64(file);
+          newEvidences.push({
+            id: Math.random().toString(36).substr(2, 9),
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            lastModified: file.lastModified,
+            data: base64
+          });
+        } catch {
+          showToast(`Error al procesar "${file.name}".`, 'error');
+        }
         continue;
       }
 
@@ -85,7 +106,7 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, observations, 
         ...currentAnswer,
         evidence: [...(currentAnswer.evidence || []), ...newEvidences]
       });
-      showToast(`${newEvidences.length} archivo(s) subido(s) correctamente.`, 'success');
+      showToast(`${newEvidences.length} archivo(s) adjunto(s) correctamente.`, 'success');
     }
     e.target.value = '';
   };
