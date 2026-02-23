@@ -1,5 +1,7 @@
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import { GRCState, Answer, ModuleId, EvaluationMetadata } from './types';
 import { MODULES, ICONS, PROCESS_TYPES } from './constants';
 import DashboardView from './components/DashboardView';
@@ -50,15 +52,73 @@ const App: React.FC = () => {
   };
 
   // ── LÓGICA EXPORTAR PDF ──
-  const handleExportPDF = useCallback(() => {
-    // Si no está en el dashboard, navegar primero y luego imprimir
+  const handleExportPDF = useCallback(async () => {
+    // Asegurarse de estar en el dashboard
     if (state.activeModule !== 'DASHBOARD') {
       setState(s => ({ ...s, activeModule: 'DASHBOARD' }));
-      setTimeout(() => window.print(), 400);
-    } else {
-      window.print();
+      await new Promise(r => setTimeout(r, 500));
     }
-  }, [state.activeModule]);
+
+    const element = document.getElementById('dashboard-print-area');
+    if (!element) return;
+
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#f8fafc',
+        scrollY: -window.scrollY,
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = imgWidth / imgHeight;
+      const pageRatio = pdfWidth / pdfHeight;
+
+      let finalWidth = pdfWidth;
+      let finalHeight = pdfWidth / ratio;
+
+      // Si el contenido es más alto que una página, paginar
+      if (finalHeight <= pdfHeight) {
+        pdf.addImage(imgData, 'PNG', 0, 0, finalWidth, finalHeight);
+      } else {
+        // Paginar el contenido
+        const pageHeightInPx = (pdfHeight / pdfWidth) * imgWidth;
+        let yOffset = 0;
+        let page = 0;
+        while (yOffset < imgHeight) {
+          if (page > 0) pdf.addPage();
+          const sliceCanvas = document.createElement('canvas');
+          sliceCanvas.width = imgWidth;
+          sliceCanvas.height = Math.min(pageHeightInPx, imgHeight - yOffset);
+          const ctx = sliceCanvas.getContext('2d')!;
+          ctx.drawImage(canvas, 0, yOffset, imgWidth, sliceCanvas.height, 0, 0, imgWidth, sliceCanvas.height);
+          const sliceData = sliceCanvas.toDataURL('image/png');
+          const sliceHeight = (sliceCanvas.height / imgWidth) * pdfWidth;
+          pdf.addImage(sliceData, 'PNG', 0, 0, pdfWidth, sliceHeight);
+          yOffset += pageHeightInPx;
+          page++;
+        }
+      }
+
+      const processName = state.metadata.processName || 'GRC';
+      pdf.save(`Panel-Control-GRC-${processName}.pdf`);
+    } catch (err) {
+      console.error('Error generando PDF:', err);
+      alert('Error al generar el PDF. Intenta nuevamente.');
+    }
+  }, [state.activeModule, state.metadata.processName]);
 
   const currentModule = useMemo(() => {
     if (state.activeModule === 'HOME' || state.activeModule === 'DASHBOARD') return null;
