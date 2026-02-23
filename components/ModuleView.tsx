@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { ModuleData, Answer, FileEvidence } from '../types';
 import { ICONS } from '../constants';
 import { ToastData } from './Toast';
@@ -17,6 +17,7 @@ interface ModuleViewProps {
 }
 
 const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, observations, onAnswer, onObservation, onSaveDimension, onBack, onGoHome, showToast }) => {
+  const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const completedCount = Object.keys(answers).filter(k => k.startsWith(module.id)).length;
   const progressPercent = (completedCount / module.questions.length) * 100;
 
@@ -283,17 +284,22 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, observations, 
                         </div>
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Evidencias Adjuntas</span>
                       </div>
-                      <label className="relative overflow-hidden cursor-pointer flex items-center gap-2 text-indigo-700 font-bold text-xs bg-indigo-50 px-5 py-3 rounded-xl border-2 border-indigo-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm select-none">
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-                          className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                          onChange={(e) => handleFileUpload(q.id, e)}
-                        />
-                        <svg className="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                        <span className="pointer-events-none">Adjuntar Evidencia</span>
-                      </label>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRefs.current[q.id]?.click()}
+                        className="flex items-center gap-2 text-indigo-700 font-bold text-xs bg-indigo-50 px-5 py-3 rounded-xl border-2 border-indigo-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                        Adjuntar Evidencia
+                      </button>
+                      <input
+                        ref={(el) => { fileInputRefs.current[q.id] = el; }}
+                        type="file"
+                        multiple
+                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                        style={{ display: 'none' }}
+                        onChange={(e) => handleFileUpload(q.id, e)}
+                      />
                     </div>
 
                     {currentAnswer?.evidence && currentAnswer.evidence.length > 0 ? (
