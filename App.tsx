@@ -1,6 +1,5 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
-import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { GRCState, Answer, ModuleId, EvaluationMetadata } from './types';
 import { MODULES, ICONS, PROCESS_TYPES } from './constants';
@@ -51,95 +50,302 @@ const App: React.FC = () => {
     }));
   };
 
-  // ── LÓGICA EXPORTAR PDF ──
-  const handleExportPDF = useCallback(async () => {
-    // Asegurarse de estar en el dashboard
-    if (state.activeModule !== 'DASHBOARD') {
-      setState(s => ({ ...s, activeModule: 'DASHBOARD' }));
-      await new Promise(r => setTimeout(r, 700));
-    }
+  // ── LÓGICA EXPORTAR PDF (jsPDF puro, sin html2canvas) ──
+  const handleExportPDF = useCallback(() => {
+    // Importar funciones de scoring
+    const { calculateModuleScore, getTopModuleGaps, getScoreLevel1000 } = require('./utils/scoring');
 
-    const element = document.getElementById('dashboard-print-area');
-    if (!element) return;
+    const M = 15;          // margen 15mm = 1.5cm
+    const PW = 215.9;      // ancho hoja carta mm
+    const PH = 279.4;      // alto hoja carta mm
+    const CW = PW - M * 2; // ancho útil = 185.9mm
+    const LH = 6;          // line height normal
 
-    try {
-      // Capturar TODO el contenido del dashboard sin recortar
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#f8fafc',
-        scrollX: 0,
-        scrollY: 0,
-        x: 0,
-        y: 0,
-        width: element.scrollWidth,
-        height: element.scrollHeight,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
-      });
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
 
-      // Hoja carta: 215.9 x 279.4 mm
-      // Márgenes: 15mm en los 4 lados (1.5 cm)
-      const MARGIN_MM = 15;
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'letter',
-      });
+    // Colores
+    const DARK   = [15, 23, 42]   as [number,number,number];
+    const INDIGO = [99, 102, 241] as [number,number,number];
+    const SLATE  = [148, 163, 184] as [number,number,number];
+    const WHITE  = [255, 255, 255] as [number,number,number];
+    const LIGHT  = [248, 250, 252] as [number,number,number];
+    const RED    = [239, 68, 68]   as [number,number,number];
+    const ORANGE = [249, 115, 22]  as [number,number,number];
+    const YELLOW = [234, 179, 8]   as [number,number,number];
+    const GREEN  = [132, 204, 22]  as [number,number,number];
+    const EMERALD= [22, 101, 52]   as [number,number,number];
 
-      const pageW_mm = pdf.internal.pageSize.getWidth();   // 215.9
-      const pageH_mm = pdf.internal.pageSize.getHeight();  // 279.4
-      const contentW_mm = pageW_mm - MARGIN_MM * 2;        // 185.9
-      const contentH_mm = pageH_mm - MARGIN_MM * 2;        // 249.4
+    const moduleColorMap: Record<string, [number,number,number]> = {
+      ADN:    [99, 102, 241],
+      CIBER:  [16, 185, 129],
+      LEGAL:  [244, 63, 94],
+      INFRA:  [245, 158, 11],
+      VENDOR: [14, 165, 233],
+      PEOPLE: [217, 70, 239],
+    };
 
-      // Resolución: px por mm en el eje X
-      const pxPerMm = canvas.width / contentW_mm;
-      // Cuántos px del canvas entran en una página (eje Y)
-      const pageH_px = contentH_mm * pxPerMm;
+    // Calcular scores
+    const scores = MODULES.map(module => ({
+      id: module.id,
+      name: module.name,
+      score: calculateModuleScore(module.id as ModuleId, state.answers, MODULES),
+      total: module.questions.length,
+      answered: Object.keys(state.answers).filter(k => k.startsWith(module.id)).length,
+      color: moduleColorMap[module.id] || INDIGO,
+      gaps: getTopModuleGaps(module.id as ModuleId, state.answers, MODULES, 5)
+    }));
 
-      const totalH_px = canvas.height;
-      let yPx = 0;
-      let pageIndex = 0;
+    const totalPossible = scores.length * 100;
+    const currentTotal = scores.reduce((a: number, b: {score: number}) => a + b.score, 0);
+    const globalCompliance = totalPossible > 0 ? (currentTotal / totalPossible) * 100 : 0;
+    const score1000 = Math.round((globalCompliance / 100) * 1000);
+    const scoreInfo = getScoreLevel1000(score1000);
 
-      while (yPx < totalH_px) {
-        if (pageIndex > 0) pdf.addPage('letter', 'portrait');
+    let y = M; // cursor vertical
+    let page = 1;
 
-        // Altura real de este slice (puede ser menor en la última página)
-        const sliceH_px = Math.min(pageH_px, totalH_px - yPx);
-        // Altura en mm proporcional al slice
-        const sliceH_mm = sliceH_px / pxPerMm;
+    // Helpers
+    const newPage = () => {
+      pdf.addPage('letter', 'portrait');
+      page++;
+      y = M;
+      // Footer en nueva página
+      drawFooter();
+    };
 
-        // Crear canvas del slice
-        const sliceCanvas = document.createElement('canvas');
-        sliceCanvas.width = canvas.width;
-        sliceCanvas.height = Math.ceil(sliceH_px);
-        const ctx = sliceCanvas.getContext('2d')!;
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
-        ctx.drawImage(
-          canvas,
-          0, yPx,                          // origen en el canvas fuente
-          canvas.width, sliceH_px,         // tamaño del recorte
-          0, 0,                            // destino en el slice
-          sliceCanvas.width, sliceH_px     // tamaño en el slice
-        );
+    const checkY = (needed: number) => {
+      if (y + needed > PH - M - 8) newPage();
+    };
 
-        const imgData = sliceCanvas.toDataURL('image/png');
-        // Posicionar con margen de 15mm en X e Y
-        pdf.addImage(imgData, 'PNG', MARGIN_MM, MARGIN_MM, contentW_mm, sliceH_mm);
+    const drawFooter = () => {
+      const savedY = y;
+      pdf.setFillColor(...LIGHT);
+      pdf.rect(0, PH - 10, PW, 10, 'F');
+      pdf.setFontSize(7);
+      pdf.setTextColor(...SLATE);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('SISTEMA DE CUMPLIMIENTO DE CIBERSEGURIDAD Y PROTECCIÓN DE DATOS', M, PH - 4);
+      pdf.text(`Página ${page}`, PW - M, PH - 4, { align: 'right' });
+      y = savedY;
+    };
 
-        yPx += pageH_px;
-        pageIndex++;
+    // ---- PÁGINA 1: PORTADA ----
+    // Header oscuro
+    pdf.setFillColor(...DARK);
+    pdf.roundedRect(M, y, CW, 38, 4, 4, 'F');
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(...WHITE);
+    pdf.text('PANEL DE CONTROL GLOBAL', M + 8, y + 13);
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(...SLATE);
+    pdf.text('SISTEMA DE CUMPLIMIENTO DE CIBERSEGURIDAD Y PROTECCIÓN DE DATOS', M + 8, y + 21);
+    pdf.text(`Proceso: ${state.metadata.processType} • ${state.metadata.processName || '-'}`, M + 8, y + 28);
+    pdf.text(`Evaluador: ${state.metadata.evaluatorName || '-'} • Fecha: ${state.metadata.date}`, M + 8, y + 34);
+    // Score badge
+    const scoreColor = score1000 >= 850 ? EMERALD : score1000 >= 700 ? GREEN : score1000 >= 500 ? YELLOW : score1000 >= 300 ? ORANGE : RED;
+    pdf.setFillColor(...scoreColor);
+    pdf.roundedRect(PW - M - 38, y + 8, 30, 22, 3, 3, 'F');
+    pdf.setFontSize(20);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(...WHITE);
+    pdf.text(String(score1000), PW - M - 23, y + 22, { align: 'center' });
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('/ 1000', PW - M - 23, y + 28, { align: 'center' });
+    y += 44;
+
+    // ---- SECCIÓN: SCORE EJECUTIVO ----
+    checkY(20);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(...DARK);
+    pdf.text('SCORE EJECUTIVO GRC', M, y + 5);
+    pdf.setDrawColor(...INDIGO);
+    pdf.setLineWidth(0.5);
+    pdf.line(M, y + 7, M + CW, y + 7);
+    y += 12;
+
+    // Barra de score global
+    checkY(18);
+    pdf.setFillColor(...LIGHT);
+    pdf.roundedRect(M, y, CW, 14, 2, 2, 'F');
+    pdf.setFillColor(...scoreColor);
+    const barW = (score1000 / 1000) * (CW - 4);
+    pdf.roundedRect(M + 2, y + 2, Math.max(barW, 2), 10, 2, 2, 'F');
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(...WHITE);
+    if (barW > 20) pdf.text(`${score1000} pts`, M + 5, y + 9);
+    pdf.setTextColor(...DARK);
+    pdf.text(scoreInfo.label.toUpperCase(), M + CW - 2, y + 9, { align: 'right' });
+    y += 18;
+
+    // Escala de referencia
+    checkY(14);
+    const ranges = [
+      { range: '0-299', label: 'CRÍTICO', color: RED },
+      { range: '300-499', label: 'ALTO', color: ORANGE },
+      { range: '500-699', label: 'MEDIO', color: YELLOW },
+      { range: '700-849', label: 'ADECUADO', color: GREEN },
+      { range: '850-1000', label: 'AVANZADO', color: EMERALD },
+    ];
+    const rW = CW / ranges.length - 2;
+    ranges.forEach((r, i) => {
+      const rx = M + i * (rW + 2);
+      pdf.setFillColor(...r.color);
+      pdf.roundedRect(rx, y, rW, 8, 1, 1, 'F');
+      pdf.setFontSize(6);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(...WHITE);
+      pdf.text(r.label, rx + rW / 2, y + 5, { align: 'center' });
+    });
+    y += 12;
+
+    // ---- SECCIÓN: RESULTADOS POR DIMENSIÓN ----
+    checkY(14);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(...DARK);
+    pdf.text('RESULTADOS POR DIMENSIÓN', M, y + 5);
+    pdf.setDrawColor(...INDIGO);
+    pdf.setLineWidth(0.5);
+    pdf.line(M, y + 7, M + CW, y + 7);
+    y += 12;
+
+    scores.forEach((s) => {
+      checkY(20);
+      const pct = Math.round(s.score);
+      const col = s.color;
+      // Fila de módulo
+      pdf.setFillColor(...LIGHT);
+      pdf.roundedRect(M, y, CW, 14, 2, 2, 'F');
+      // Indicador color
+      pdf.setFillColor(...col);
+      pdf.roundedRect(M + 2, y + 2, 4, 10, 1, 1, 'F');
+      // Nombre
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(...DARK);
+      const shortName = s.name.length > 45 ? s.name.substring(0, 42) + '...' : s.name;
+      pdf.text(shortName, M + 9, y + 9);
+      // Controles
+      pdf.setFontSize(7);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(...SLATE);
+      pdf.text(`${s.answered}/${s.total} controles`, PW - M - 50, y + 9);
+      // Porcentaje
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(...col);
+      pdf.text(`${pct}%`, PW - M - 2, y + 9, { align: 'right' });
+      // Barra de progreso
+      pdf.setFillColor(226, 232, 240);
+      pdf.roundedRect(M + 9, y + 10.5, CW - 60, 2, 0.5, 0.5, 'F');
+      if (pct > 0) {
+        pdf.setFillColor(...col);
+        pdf.roundedRect(M + 9, y + 10.5, (CW - 60) * pct / 100, 2, 0.5, 0.5, 'F');
       }
+      y += 16;
+    });
 
-      const processName = state.metadata.processName || 'GRC';
-      pdf.save(`Panel-Control-GRC-${processName}.pdf`);
-    } catch (err) {
-      console.error('Error generando PDF:', err);
-      alert('Error al generar el PDF. Intenta nuevamente.');
+    // ---- SECCIÓN: MAPA DE BRECHAS ----
+    checkY(14);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(...DARK);
+    pdf.text('MAPA DE BRECHAS DE RESILIENCIA', M, y + 5);
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(...SLATE);
+    pdf.text('Top 5 hallazgos críticos por dimensión', M, y + 11);
+    pdf.setDrawColor(...INDIGO);
+    pdf.setLineWidth(0.5);
+    pdf.line(M, y + 13, M + CW, y + 13);
+    y += 18;
+
+    scores.forEach((s) => {
+      if (s.gaps.length === 0) return;
+      checkY(14);
+      // Título del módulo
+      pdf.setFillColor(...s.color);
+      pdf.roundedRect(M, y, CW, 8, 1, 1, 'F');
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(...WHITE);
+      pdf.text(s.name.toUpperCase(), M + 4, y + 5.5);
+      y += 10;
+
+      s.gaps.forEach((gap: {questionId: number; text: string; value: number}, idx: number) => {
+        const riskPct = Math.round((1 - gap.value) * 100);
+        const riskLabel = riskPct === 100 ? 'CRÍTICO' : riskPct >= 60 ? 'ALTO' : 'MEDIO';
+        const riskColor = riskPct === 100 ? RED : riskPct >= 60 ? ORANGE : YELLOW;
+
+        // Calcular altura necesaria para este finding
+        const lines = pdf.splitTextToSize(`${gap.text}`, CW - 30);
+        const neededH = 6 + lines.length * 4.5 + 6;
+        checkY(neededH);
+
+        // Fondo alternado
+        pdf.setFillColor(idx % 2 === 0 ? 248 : 255, idx % 2 === 0 ? 250 : 255, idx % 2 === 0 ? 252 : 255);
+        pdf.roundedRect(M, y, CW, neededH - 2, 1, 1, 'F');
+        pdf.setDrawColor(226, 232, 240);
+        pdf.setLineWidth(0.2);
+        pdf.roundedRect(M, y, CW, neededH - 2, 1, 1, 'S');
+
+        // Badge de riesgo
+        pdf.setFillColor(...riskColor);
+        pdf.roundedRect(M + 2, y + 1.5, 16, 5, 1, 1, 'F');
+        pdf.setFontSize(5.5);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(...WHITE);
+        pdf.text(riskLabel, M + 10, y + 5, { align: 'center' });
+
+        // Número de finding
+        pdf.setFontSize(6);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(...SLATE);
+        pdf.text(`FINDING-${gap.questionId}`, M + CW - 2, y + 5, { align: 'right' });
+
+        // Texto de la pregunta
+        pdf.setFontSize(7);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(...DARK);
+        pdf.text(lines, M + 20, y + 5.5);
+
+        // Barra de riesgo
+        const barY = y + 4.5 + lines.length * 4.5;
+        pdf.setFillColor(226, 232, 240);
+        pdf.roundedRect(M + 2, barY, CW - 30, 2, 0.5, 0.5, 'F');
+        pdf.setFillColor(...riskColor);
+        pdf.roundedRect(M + 2, barY, (CW - 30) * riskPct / 100, 2, 0.5, 0.5, 'F');
+        pdf.setFontSize(6);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(...riskColor);
+        pdf.text(`${riskPct}% Riesgo`, M + CW - 2, barY + 1.5, { align: 'right' });
+
+        y += neededH;
+      });
+      y += 4;
+    });
+
+    // Footer en página 1 y todas las páginas
+    const totalPages = (pdf as any).internal.pages.length - 1;
+    for (let p = 1; p <= totalPages; p++) {
+      pdf.setPage(p);
+      pdf.setFillColor(...LIGHT);
+      pdf.rect(0, PH - 10, PW, 10, 'F');
+      pdf.setFontSize(7);
+      pdf.setTextColor(...SLATE);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('SISTEMA DE CUMPLIMIENTO DE CIBERSEGURIDAD Y PROTECCIÓN DE DATOS', M, PH - 4);
+      pdf.text(`Página ${p} de ${totalPages}`, PW - M, PH - 4, { align: 'right' });
     }
-  }, [state.activeModule, state.metadata.processName]);
+
+    const processName = state.metadata.processName || 'GRC';
+    pdf.save(`Panel-Control-GRC-${processName}.pdf`);
+  }, [state.answers, state.activeModule, state.metadata]);
 
   const currentModule = useMemo(() => {
     if (state.activeModule === 'HOME' || state.activeModule === 'DASHBOARD') return null;
