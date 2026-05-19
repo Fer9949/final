@@ -4,7 +4,6 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } fro
 import { GRCState, ModuleId } from '../types';
 import { MODULES, ICONS } from '../constants';
 import { calculateModuleScore, getScoreLevel1000, getTopModuleGaps, getCategoryScores, GapFinding } from '../utils/scoring';
-import { GoogleGenAI } from "@google/genai";
 
 interface DashboardViewProps {
   state: GRCState;
@@ -162,16 +161,97 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, on
   const runAiAnalysis = async () => {
     setIsAnalyzing(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `Analiza los siguientes resultados de una evaluación GRC y genera un resumen ejecutivo de 3 párrafos resaltando brechas críticas. Contexto: Proceso ${state.metadata.processName}. Resultados: ${scores.map(s => `${s.name}: ${s.score.toFixed(1)}%`).join(', ')}. Score Ejecutivo: ${Math.round((globalCompliance / 100) * 1000)}/1000.`;
+      const apiKey = process.env.OPENROUTER_API_KEY;
+      if (!apiKey) {
+        setAiAnalysis('Error: OPENROUTER_API_KEY no está configurada en .env.local');
+        return;
+      }
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt
+      const moduleSummaries = scores.map(s => {
+        const cats = getCategoryScores(s.id as ModuleId, state.answers, MODULES);
+        const worstCats = cats
+          .filter(c => c.answeredQuestions > 0)
+          .slice(0, 3)
+          .map(c => `${c.category}: ${Math.round(c.score)}%`)
+          .join(' | ');
+        return `${s.name} (${Math.round(s.score)}%) — peores subdominios: ${worstCats || 'sin datos'}`;
+      }).join('\n');
+
+      const criticalGaps = scores
+        .flatMap(s => s.gaps.map(g => ({ moduleName: s.name, ...g })))
+        .filter(g => g.value <= 0.5)
+        .sort((a, b) => a.value - b.value)
+        .slice(0, 10)
+        .map(g => `- [${g.moduleName}] ${g.text.slice(0, 180)}`)
+        .join('\n');
+
+      const systemMessage = 'Eres un asesor experto en GRC (Gobierno, Riesgo y Cumplimiento), especialista en ciberseguridad (CIS Controls IG1), protección de datos (Ley 21.719 chilena), continuidad de negocio (ISO 22301), cadena de suministro y gestión del riesgo humano. Generas planes de acción concretos, priorizados por impacto, en español formal de Chile.';
+
+      const userMessage = `Analiza esta evaluación GRC y genera un plan de acción accionable.
+
+CONTEXTO DEL PROCESO
+- Proceso: ${state.metadata.processName || 'No especificado'}
+- Tipo: ${state.metadata.processType}
+- Dueño: ${state.metadata.processOwner || 'No especificado'}
+- Evaluador: ${state.metadata.evaluatorName || 'No especificado'}
+- Fecha: ${state.metadata.date}
+
+PUNTAJE GLOBAL: ${Math.round(globalCompliance)}% (Score Ejecutivo: ${Math.round((globalCompliance / 100) * 1000)}/1000)
+
+RESULTADOS POR DIMENSIÓN
+${moduleSummaries}
+
+HALLAZGOS CRÍTICOS (peores 10)
+${criticalGaps || 'Sin hallazgos críticos.'}
+
+INSTRUCCIONES
+Genera un plan de acción con esta estructura exacta:
+
+1. DIAGNÓSTICO EJECUTIVO (2-3 frases)
+   Resumen honesto del estado de la organización.
+
+2. TOP 3 SUBDOMINIOS PRIORITARIOS A REMEDIAR
+   Para cada uno, indica:
+   - Nombre del subdominio + dimensión
+   - Por qué es crítico (1 frase)
+   - 2 acciones concretas y específicas a 30 días
+   - Indicador de éxito medible
+
+3. RIESGOS NO MITIGADOS
+   3-5 riesgos residuales que la organización debe aceptar o transferir.
+
+4. PRÓXIMOS 90 DÍAS
+   Tres hitos accionables ordenados cronológicamente.
+
+Sé directo, técnico y específico. No uses generalidades. Máximo 800 palabras.`;
+
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'GRC Master Enterprise',
+        },
+        body: JSON.stringify({
+          model: 'nvidia/nemotron-3-super-120b-a12b:free',
+          messages: [
+            { role: 'system', content: systemMessage },
+            { role: 'user', content: userMessage },
+          ],
+        }),
       });
-      setAiAnalysis(response.text || "No se pudo generar el análisis.");
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errText}`);
+      }
+
+      const data = await response.json();
+      const text = data.choices?.[0]?.message?.content;
+      setAiAnalysis(text || 'No se pudo generar el análisis.');
     } catch (error) {
-      setAiAnalysis("Error al conectar con la IA.");
+      setAiAnalysis(`Error al conectar con la IA: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsAnalyzing(false);
     }
