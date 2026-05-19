@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import { GRCState, Answer, ModuleId, EvaluationMetadata } from './types';
 import { MODULES, ICONS, PROCESS_TYPES } from './constants';
@@ -8,19 +8,67 @@ import DashboardView from './components/DashboardView';
 import ModuleView from './components/ModuleView';
 import HomeView from './components/HomeView';
 
-const App: React.FC = () => {
-  const [state, setState] = useState<GRCState>({
-    answers: {},
-    activeModule: 'HOME',
-    metadata: {
-      processType: PROCESS_TYPES[0],
-      processName: '',
-      processOwner: '',
-      evaluatorName: '',
-      evaluatorRole: '',
-      date: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })
+const STORAGE_KEY = 'grc-evaluation-v1';
+const AI_STORAGE_KEY = 'grc-evaluation-v1:ai';
+
+const defaultState: GRCState = {
+  answers: {},
+  activeModule: 'HOME',
+  metadata: {
+    processType: PROCESS_TYPES[0],
+    processName: '',
+    processOwner: '',
+    evaluatorName: '',
+    evaluatorRole: '',
+    date: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })
+  }
+};
+
+const loadPersistedState = (): GRCState => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && parsed.answers && parsed.metadata) {
+      return { ...defaultState, ...parsed, metadata: { ...defaultState.metadata, ...parsed.metadata } };
     }
+  } catch {}
+  return defaultState;
+};
+
+const App: React.FC = () => {
+  const [state, setState] = useState<GRCState>(loadPersistedState);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(() => {
+    try { return localStorage.getItem(AI_STORAGE_KEY); } catch { return null; }
   });
+
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+  }, [state]);
+
+  useEffect(() => {
+    try {
+      if (aiAnalysis) localStorage.setItem(AI_STORAGE_KEY, aiAnalysis);
+      else localStorage.removeItem(AI_STORAGE_KEY);
+    } catch {}
+  }, [aiAnalysis]);
+
+  const resetEvaluation = useCallback(() => {
+    if (confirm('¿Descartar la evaluación actual y comenzar una nueva? Esta acción no se puede deshacer.')) {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(AI_STORAGE_KEY);
+      } catch {}
+      setAiAnalysis(null);
+      setState({
+        ...defaultState,
+        metadata: {
+          ...defaultState.metadata,
+          date: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })
+        }
+      });
+    }
+  }, []);
 
   const moduleColors: Record<ModuleId, string> = {
     CIBER: '#10b981',  // Emerald
@@ -539,6 +587,13 @@ const App: React.FC = () => {
           </div>
           
           <button
+            onClick={resetEvaluation}
+            className="w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-amber-600 hover:bg-amber-50 font-bold text-xs uppercase tracking-widest mb-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            <span>Nueva Evaluación</span>
+          </button>
+          <button
             onClick={() => setState(s => ({ ...s, activeModule: 'HOME' }))}
             className="w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-red-500 hover:bg-red-50 font-bold text-xs uppercase tracking-widest"
           >
@@ -589,7 +644,13 @@ const App: React.FC = () => {
         <div className="p-10 max-w-7xl mx-auto w-full">
           {state.activeModule === 'DASHBOARD' ? (
             <div id="dashboard-print-area">
-              <DashboardView state={state} onSwitchModule={(id) => setState(s => ({...s, activeModule: id}))} onGoHome={() => setState(s => ({...s, activeModule: 'HOME'}))} />
+              <DashboardView
+                state={state}
+                aiAnalysis={aiAnalysis}
+                onAiAnalysisChange={setAiAnalysis}
+                onSwitchModule={(id) => setState(s => ({...s, activeModule: id}))}
+                onGoHome={() => setState(s => ({...s, activeModule: 'HOME'}))}
+              />
             </div>
           ) : (
             currentModule && (

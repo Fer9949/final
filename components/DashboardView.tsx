@@ -7,6 +7,8 @@ import { calculateModuleScore, getScoreLevel1000, getTopModuleGaps, getCategoryS
 
 interface DashboardViewProps {
   state: GRCState;
+  aiAnalysis: string | null;
+  onAiAnalysisChange: (analysis: string | null) => void;
   onSwitchModule: (id: ModuleId) => void;
   onGoHome: () => void;
 }
@@ -128,9 +130,9 @@ const GapBadge: React.FC<{ value: number }> = ({ value }) => {
   return <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-md text-[9px] font-black uppercase">Medio</span>;
 };
 
-const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, onGoHome }) => {
-  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+const DashboardView: React.FC<DashboardViewProps> = ({ state, aiAnalysis, onAiAnalysisChange, onSwitchModule, onGoHome }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const setAiAnalysis = onAiAnalysisChange;
 
   const moduleColors: Record<ModuleId, string> = {
     CIBER: '#10b981',  // Emerald
