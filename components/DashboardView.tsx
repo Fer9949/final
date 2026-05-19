@@ -1,5 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { GRCState, ModuleId } from '../types';
 import { MODULES, ICONS } from '../constants';
@@ -351,7 +353,7 @@ Sé directo, técnico y específico. No uses generalidades. Máximo 800 palabras
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
                 <PolarGrid stroke="#f1f5f9" strokeWidth={2} />
-                <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 800, textTransform: 'uppercase' }} />
+                <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 800 }} />
                 <Radar
                   name="Cumplimiento"
                   dataKey="A"
@@ -576,12 +578,34 @@ Sé directo, técnico y específico. No uses generalidades. Máximo 800 palabras
           </div>
 
           {aiAnalysis ? (
-            <div className="bg-white/[0.03] backdrop-blur-md border border-white/10 rounded-[2.5rem] p-12 text-slate-200 leading-relaxed font-light whitespace-pre-line animate-in fade-in slide-in-from-bottom-8 duration-1000 shadow-2xl">
+            <div className="bg-white/[0.03] backdrop-blur-md border border-white/10 rounded-[2.5rem] p-12 text-slate-200 leading-relaxed font-light animate-in fade-in slide-in-from-bottom-8 duration-1000 shadow-2xl">
                <div className="mb-6 flex items-center gap-3">
                   <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
                   <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Análisis Generativo Finalizado</span>
                </div>
-               {aiAnalysis}
+               <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h1: (props) => <h1 className="text-xl font-black text-white mt-6 mb-3 tracking-tight" {...props} />,
+                    h2: (props) => <h2 className="text-lg font-black text-indigo-300 mt-6 mb-3 tracking-tight" {...props} />,
+                    h3: (props) => <h3 className="text-base font-bold text-indigo-200 mt-4 mb-2" {...props} />,
+                    p: (props) => <p className="text-slate-200 leading-relaxed mb-3" {...props} />,
+                    strong: (props) => <strong className="text-white font-bold" {...props} />,
+                    em: (props) => <em className="text-indigo-200 italic" {...props} />,
+                    ul: (props) => <ul className="list-disc list-outside space-y-1.5 ml-5 mb-4" {...props} />,
+                    ol: (props) => <ol className="list-decimal list-outside space-y-1.5 ml-5 mb-4" {...props} />,
+                    li: (props) => <li className="text-slate-200 leading-relaxed" {...props} />,
+                    table: (props) => <div className="overflow-x-auto my-5 rounded-2xl border border-white/10"><table className="w-full text-sm text-left border-collapse" {...props} /></div>,
+                    thead: (props) => <thead className="bg-white/5 border-b border-white/10" {...props} />,
+                    th: (props) => <th className="px-4 py-3 font-black text-indigo-300 text-[10px] uppercase tracking-widest" {...props} />,
+                    td: (props) => <td className="px-4 py-3 text-slate-200 text-xs border-t border-white/5 align-top" {...props} />,
+                    hr: () => <hr className="border-white/10 my-6" />,
+                    code: (props) => <code className="bg-white/10 px-1.5 py-0.5 rounded text-indigo-300 text-xs font-mono" {...props} />,
+                    a: (props) => <a className="text-indigo-400 underline hover:text-indigo-300" {...props} />,
+                  }}
+               >
+                  {aiAnalysis}
+               </ReactMarkdown>
             </div>
           ) : !isAnalyzing && (
             <div className="text-center py-24 border-2 border-dashed border-white/5 rounded-[3rem] bg-white/[0.01] group-hover:bg-white/[0.02] transition-colors">
