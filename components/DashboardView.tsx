@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { GRCState, ModuleId } from '../types';
 import { MODULES, ICONS } from '../constants';
-import { calculateModuleScore, getScoreLevel1000, getTopModuleGaps, GapFinding } from '../utils/scoring';
+import { calculateModuleScore, getScoreLevel1000, getTopModuleGaps, getCategoryScores, GapFinding } from '../utils/scoring';
 import { GoogleGenAI } from "@google/genai";
 
 interface DashboardViewProps {
@@ -277,7 +277,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, on
                 <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-700">Nota de Continuidad</h5>
              </div>
              <p className="text-xs text-slate-500 leading-relaxed italic">
-               El gráfico radial representa el equilibrio entre las 6 dimensiones auditadas. Un polígono irregular sugiere concentraciones de riesgo que podrían comprometer la resiliencia global ante incidentes disruptivos.
+               El gráfico radial representa el equilibrio entre las 5 dimensiones auditadas. Un polígono irregular sugiere concentraciones de riesgo que podrían comprometer la resiliencia global ante incidentes disruptivos.
              </p>
           </div>
         </div>
@@ -329,6 +329,65 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, on
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Análisis por Categoría / Subdominios */}
+      <div className="bg-white rounded-[3.5rem] p-12 shadow-[0_20px_60px_rgba(0,0,0,0.05)] border border-slate-100">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div>
+            <h4 className="text-2xl font-black text-slate-900 tracking-tight mb-2 uppercase">Análisis por Categoría</h4>
+            <p className="text-slate-400 text-sm font-medium tracking-wide italic">Desglose del cumplimiento por subdominio dentro de cada dimensión auditada.</p>
+          </div>
+          <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>&lt;50%</div>
+            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>50-69%</div>
+            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>≥70%</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          {scores.map(s => {
+            const catScores = getCategoryScores(s.id as ModuleId, state.answers, MODULES);
+            return (
+              <div key={s.id} className="space-y-4">
+                <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm" style={{ backgroundColor: s.color }}>
+                    {ICONS[MODULES.find(m => m.id === s.id)?.icon || 'Layout']}
+                  </div>
+                  <h5 className="text-sm font-black text-slate-800 uppercase tracking-tight">{s.name}</h5>
+                  <span className="ml-auto text-[10px] font-black text-slate-400 tabular-nums">{catScores.length} subdominios</span>
+                </div>
+                <div className="space-y-3">
+                  {catScores.map((c, i) => {
+                    const noData = c.answeredQuestions === 0;
+                    const barColor = noData ? '#cbd5e1' : c.score < 50 ? '#ef4444' : c.score < 70 ? '#f59e0b' : '#10b981';
+                    return (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1 gap-2">
+                            <span className="text-[11px] font-bold text-slate-700 tracking-tight truncate">{c.category}</span>
+                            <span className="text-[10px] font-black text-slate-500 tabular-nums flex-shrink-0">
+                              {noData ? '–' : `${Math.round(c.score)}%`}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-700"
+                              style={{ width: `${noData ? 0 : c.score}%`, backgroundColor: barColor }}
+                            />
+                          </div>
+                        </div>
+                        <span className="text-[9px] font-black text-slate-400 w-10 text-right tabular-nums flex-shrink-0">
+                          {c.answeredQuestions}/{c.totalQuestions}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Hallazgos Críticos Consolidados Section (Mapa de Brechas de Resiliencia) */}

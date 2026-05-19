@@ -59,6 +59,53 @@ export const getTopModuleGaps = (moduleId: ModuleId, answers: Record<string, Ans
   return gaps;
 };
 
+export interface CategoryScore {
+  category: string;
+  score: number;
+  totalQuestions: number;
+  answeredQuestions: number;
+}
+
+export const getCategoryScores = (
+  moduleId: ModuleId,
+  answers: Record<string, Answer>,
+  modules: ModuleData[]
+): CategoryScore[] => {
+  const module = modules.find(m => m.id === moduleId);
+  if (!module) return [];
+
+  const byCategory = new Map<string, Question[]>();
+  for (const q of module.questions) {
+    const cat = q.categoria || 'Sin categoría';
+    if (!byCategory.has(cat)) byCategory.set(cat, []);
+    byCategory.get(cat)!.push(q);
+  }
+
+  const result: CategoryScore[] = [];
+  byCategory.forEach((questions, category) => {
+    let weightedScore = 0;
+    let totalWeight = 0;
+    let answered = 0;
+    for (const q of questions) {
+      const ans = answers[`${moduleId}_${q.id}`];
+      if (ans && ans.value !== -1) {
+        const weight = q.peso || 1;
+        weightedScore += ans.value * weight;
+        totalWeight += weight;
+        answered++;
+      }
+    }
+    result.push({
+      category,
+      score: totalWeight > 0 ? (weightedScore / totalWeight) * 100 : 0,
+      totalQuestions: questions.length,
+      answeredQuestions: answered,
+    });
+  });
+
+  return result.sort((a, b) => a.score - b.score);
+};
+
 export const getRiskLevel = (score: number) => {
   if (score >= 90) return { label: 'Insignificante', color: 'bg-green-100 text-green-800' };
   if (score >= 70) return { label: 'Bajo', color: 'bg-blue-100 text-blue-800' };
