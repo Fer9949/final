@@ -465,6 +465,135 @@ const App: React.FC = () => {
       y += 4;
     });
 
+    // ---- SECCIÓN: PLAN DE ACCIÓN GENERADO POR IA ----
+    if (aiAnalysis && aiAnalysis.trim() !== '') {
+      newPage();
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(...DARK);
+      pdf.text('PLAN DE ACCIÓN GENERADO POR IA', M, y + 5);
+      pdf.setFontSize(7);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(...SLATE);
+      pdf.text(`Generado con Nemotron 3 Super 120B vía OpenRouter • ${state.metadata.date}`, M, y + 11);
+      pdf.setDrawColor(...INDIGO);
+      pdf.setLineWidth(0.5);
+      pdf.line(M, y + 13, M + CW, y + 13);
+      y += 18;
+
+      const parseRow = (line: string): string[] =>
+        line.split('|').slice(1, -1).map(c => c.trim().replace(/\*\*(.+?)\*\*/g, '$1'));
+
+      const renderTableRow = (headers: string[], cells: string[]) => {
+        y += 2;
+        // Primera celda en negrita como título del bloque
+        if (cells[0]) {
+          pdf.setFontSize(9);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(...DARK);
+          for (const wline of pdf.splitTextToSize(cells[0], CW - 4)) {
+            checkY(5);
+            pdf.text(wline, M + 2, y + 3);
+            y += 4.8;
+          }
+        }
+        // Resto de celdas etiquetadas con su header
+        for (let i = 1; i < cells.length; i++) {
+          if (!cells[i]) continue;
+          checkY(6);
+          pdf.setFontSize(6.5);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(...SLATE);
+          pdf.text((headers[i] || '').toUpperCase(), M + 4, y + 3);
+          y += 4;
+          pdf.setFontSize(8);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(...DARK);
+          const text = cells[i].replace(/<br\s*\/?>/gi, '\n');
+          for (const wline of pdf.splitTextToSize(text, CW - 10)) {
+            checkY(5);
+            pdf.text(wline, M + 6, y + 3);
+            y += 4.5;
+          }
+          y += 1;
+        }
+        y += 2;
+        pdf.setDrawColor(226, 232, 240);
+        pdf.setLineWidth(0.2);
+        pdf.line(M + 2, y, M + CW - 2, y);
+        y += 2;
+      };
+
+      const lines = aiAnalysis.split('\n');
+      let i = 0;
+      while (i < lines.length) {
+        const line = lines[i].trim();
+        if (!line) { y += 2; i++; continue; }
+
+        // Tabla markdown
+        if (line.startsWith('|')) {
+          const headers = parseRow(line);
+          if (i + 1 < lines.length && /^\|[\s\-:\|]+\|?$/.test(lines[i + 1].trim())) i += 2;
+          else i++;
+          while (i < lines.length && lines[i].trim().startsWith('|')) {
+            renderTableRow(headers, parseRow(lines[i].trim()));
+            i++;
+          }
+          y += 3;
+          continue;
+        }
+
+        const isSection = /^\*\*\d+\..+\*\*\s*$/.test(line) ||
+                          /^\d+\.\s+[A-ZÁÉÍÓÚÑ]/.test(line) ||
+                          /^#+\s+/.test(line);
+        const isBullet = /^[-*]\s+/.test(line);
+
+        const clean = line
+          .replace(/\*\*(.+?)\*\*/g, '$1')
+          .replace(/^#+\s+/, '')
+          .replace(/^[-*]\s+/, '')
+          .replace(/[`~_]/g, '');
+
+        if (isSection) {
+          checkY(10);
+          y += 3;
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(...INDIGO);
+          pdf.text(clean, M, y + 4);
+          y += 6;
+          pdf.setDrawColor(...INDIGO);
+          pdf.setLineWidth(0.3);
+          pdf.line(M, y, M + 30, y);
+          y += 3;
+        } else if (isBullet) {
+          pdf.setFontSize(8);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(...DARK);
+          const wrapped = pdf.splitTextToSize(clean, CW - 8);
+          for (let j = 0; j < wrapped.length; j++) {
+            checkY(5);
+            if (j === 0) {
+              pdf.setFillColor(...INDIGO);
+              pdf.circle(M + 3, y + 2.5, 0.7, 'F');
+            }
+            pdf.text(wrapped[j], M + 6, y + 3);
+            y += 4.5;
+          }
+        } else {
+          pdf.setFontSize(8);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(...DARK);
+          for (const wline of pdf.splitTextToSize(clean, CW - 4)) {
+            checkY(5);
+            pdf.text(wline, M + 2, y + 3);
+            y += 4.5;
+          }
+        }
+        i++;
+      }
+    }
+
     // Footer en página 1 y todas las páginas
     const totalPages = (pdf as any).internal.pages.length - 1;
     for (let p = 1; p <= totalPages; p++) {
@@ -480,7 +609,7 @@ const App: React.FC = () => {
 
     const processName = state.metadata.processName || 'GRC';
     pdf.save(`Panel-Control-GRC-${processName}.pdf`);
-  }, [state.answers, state.activeModule, state.metadata]);
+  }, [state.answers, state.activeModule, state.metadata, aiAnalysis]);
 
   const currentModule = useMemo(() => {
     if (state.activeModule === 'HOME' || state.activeModule === 'DASHBOARD') return null;
