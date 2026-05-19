@@ -3,7 +3,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import { GRCState, Answer, ModuleId, EvaluationMetadata } from './types';
 import { MODULES, ICONS, PROCESS_TYPES } from './constants';
-import { calculateModuleScore, getTopModuleGaps, getScoreLevel1000 } from './utils/scoring';
+import { calculateModuleScore, getTopModuleGaps, getCategoryScores, getScoreLevel1000 } from './utils/scoring';
 import DashboardView from './components/DashboardView';
 import ModuleView from './components/ModuleView';
 import HomeView from './components/HomeView';
@@ -244,6 +244,92 @@ const App: React.FC = () => {
         pdf.roundedRect(M + 9, y + 10.5, (CW - 60) * pct / 100, 2, 0.5, 0.5, 'F');
       }
       y += 16;
+    });
+
+    // ---- SECCIÓN: ANÁLISIS POR CATEGORÍA ----
+    checkY(18);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(...DARK);
+    pdf.text('ANÁLISIS POR CATEGORÍA', M, y + 5);
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(...SLATE);
+    pdf.text('Desglose del cumplimiento por subdominio dentro de cada dimensión', M, y + 11);
+    pdf.setDrawColor(...INDIGO);
+    pdf.setLineWidth(0.5);
+    pdf.line(M, y + 13, M + CW, y + 13);
+    y += 18;
+
+    scores.forEach((s) => {
+      const catScores = getCategoryScores(s.id as ModuleId, state.answers, MODULES);
+      if (catScores.length === 0) return;
+
+      // Asegurar que título + al menos 2 filas quepan juntos (evita huérfanos)
+      checkY(9 + 5 * Math.min(2, catScores.length));
+
+      // Banda título del módulo
+      pdf.setFillColor(...s.color);
+      pdf.roundedRect(M, y, CW, 7, 1, 1, 'F');
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(...WHITE);
+      pdf.text(s.name.toUpperCase(), M + 3, y + 5);
+      pdf.setFontSize(6);
+      pdf.text(`${catScores.length} SUBDOMINIOS`, M + CW - 3, y + 5, { align: 'right' });
+      y += 9;
+
+      catScores.forEach((c, idx) => {
+        checkY(5);
+        const noData = c.answeredQuestions === 0;
+        const sc = Math.round(c.score);
+        const barColor: [number, number, number] = noData
+          ? SLATE
+          : sc < 50
+            ? RED
+            : sc < 70
+              ? ORANGE
+              : GREEN;
+
+        // Fondo alternado
+        if (idx % 2 === 0) {
+          pdf.setFillColor(...LIGHT);
+          pdf.rect(M, y - 0.5, CW, 5, 'F');
+        }
+
+        // Nombre de la categoría
+        pdf.setFontSize(7);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(...DARK);
+        const catName = c.category.length > 38 ? c.category.substring(0, 35) + '...' : c.category;
+        pdf.text(catName, M + 2, y + 3);
+
+        // Barra de progreso
+        const barX = M + 78;
+        const barW = CW - 78 - 22;
+        pdf.setFillColor(226, 232, 240);
+        pdf.roundedRect(barX, y + 1.5, barW, 2, 0.5, 0.5, 'F');
+        if (!noData) {
+          pdf.setFillColor(...barColor);
+          pdf.roundedRect(barX, y + 1.5, (barW * sc) / 100, 2, 0.5, 0.5, 'F');
+        }
+
+        // Conteo respondidas/totales
+        pdf.setFontSize(6);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(...SLATE);
+        pdf.text(`${c.answeredQuestions}/${c.totalQuestions}`, M + CW - 18, y + 3);
+
+        // Porcentaje
+        pdf.setFontSize(7);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(...barColor);
+        pdf.text(noData ? '–' : `${sc}%`, M + CW - 2, y + 3, { align: 'right' });
+
+        y += 5;
+      });
+
+      y += 4;
     });
 
     // ---- SECCIÓN: MAPA DE BRECHAS ----
