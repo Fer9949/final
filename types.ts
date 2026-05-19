@@ -1,5 +1,5 @@
 
-export type ModuleId = 'ADN' | 'CIBER' | 'LEGAL' | 'INFRA' | 'VENDOR' | 'PEOPLE';
+export type ModuleId = 'CIBER' | 'LEGAL' | 'INFRA' | 'VENDOR' | 'PEOPLE';
 
 export interface Option {
   texto: string;

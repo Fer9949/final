@@ -134,7 +134,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, onSwitchModule, on
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const moduleColors: Record<ModuleId, string> = {
-    ADN: '#6366f1',    // Indigo
     CIBER: '#10b981',  // Emerald
     LEGAL: '#f43f5e',  // Rose
     INFRA: '#f59e0b',  // Amber

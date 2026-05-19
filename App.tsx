@@ -23,7 +23,6 @@ const App: React.FC = () => {
   });
 
   const moduleColors: Record<ModuleId, string> = {
-    ADN: '#6366f1',    // Indigo
     CIBER: '#10b981',  // Emerald
     LEGAL: '#f43f5e',  // Rose
     INFRA: '#f59e0b',  // Amber
@@ -74,7 +73,6 @@ const App: React.FC = () => {
     const EMERALD= [22, 101, 52]   as [number,number,number];
 
     const moduleColorMap: Record<string, [number,number,number]> = {
-      ADN:    [99, 102, 241],
       CIBER:  [16, 185, 129],
       LEGAL:  [244, 63, 94],
       INFRA:  [245, 158, 11],

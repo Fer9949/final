@@ -16,241 +16,8 @@ const NA_OPTION = { texto: "No aplica", valor: -1 };
 
 export const MODULES: ModuleData[] = [
   {
-    id: 'ADN',
-    name: 'Dependencia del Proceso',
-    description: 'Análisis de criticidad y mapa de dependencias tecnológicas, humanas y de terceros.',
-    objetivo: 'Establecer el contexto de negocio, los niveles de criticidad y los umbrales de tolerancia del proceso. Este módulo actúa como la "brújula" del motor, configurando dinámicamente los pesos y los techos de score (Gates) según el impacto real en la operación.',
-    icon: 'Network',
-    questions: [
-      { 
-        id: 1, 
-        categoria: "Gobernanza", 
-        pregunta: "¿Se encuentra el proceso formalmente documentado en un manual de procedimientos vigente, incluyendo el diagrama de flujo, las entradas, salidas y los indicadores clave de desempeño (KPI)?", 
-        opciones: [
-          { texto: "Sí, documentado y vigente", valor: 1.0 },
-          { texto: "Parcialmente, existe flujo pero no manual", valor: 0.5 },
-          { texto: "No existe documentación formal", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 2, 
-        categoria: "Responsabilidad", 
-        pregunta: "¿Existe una matriz de responsabilidades (RACI) que identifique claramente quién es el dueño del proceso (Process Owner) y quiénes son los responsables de su ejecución y supervisión?", 
-        opciones: [
-          { texto: "Sí, matriz RACI definida", valor: 1.0 },
-          { texto: "Solo responsables nombrados de palabra", valor: 0.5 },
-          { texto: "No hay responsables definidos", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 3, 
-        categoria: "Criticidad Operativa", 
-        pregunta: "¿Cuál es el impacto directo en la continuidad del negocio si este proceso fallara durante un periodo de alta demanda estacional?", 
-        opciones: [
-          { texto: "Bajo: Impacto despreciable", valor: 1.0 },
-          { texto: "Medio: Impacto operativo recuperable", valor: 0.6 },
-          { texto: "Alto: Afecta significativamente la entrega", valor: 0.3 },
-          { texto: "Crítico: Cese total de la operación principal", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 4, 
-        categoria: "Riesgo Reputacional", 
-        pregunta: "¿En qué medida la falla de este proceso afectaría la imagen pública, la confianza de los clientes o generaría multas por incumplimiento de niveles de servicio (SLA)?", 
-        opciones: [
-          { texto: "Bajo: Sin impacto externo", valor: 1.0 },
-          { texto: "Moderado: Quejas internas o de partners", valor: 0.6 },
-          { texto: "Significativo: Afecta confianza pública", valor: 0.3 },
-          { texto: "Extremo: Pérdida masiva de clientes/Imagen", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 5, 
-        categoria: "Tolerancia (RTO)", 
-        pregunta: "¿Cuál es el tiempo objetivo de recuperación (RTO) máximo definido antes de que la interrupción cause un daño irreversible o financiero inasumible?", 
-        opciones: [
-          { texto: "Diferible: Más de una semana", valor: 1.0 },
-          { texto: "Necesario: Entre 1 y 3 días", valor: 0.6 },
-          { texto: "Urgente: Entre 4 y 24 horas", valor: 0.3 },
-          { texto: "Crítico: Menos de 4 horas", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 6, 
-        categoria: "Modo de Contingencia", 
-        pregunta: "¿Cuenta el proceso con un Plan de Continuidad (BCP) que incluya procedimientos de operación en 'modo degradado' o manual sin depender de sistemas TI?", 
-        opciones: [
-          { texto: "Sí, probado y documentado", valor: 1.0 },
-          { texto: "Parcial, se conoce pero no se ha probado", valor: 0.5 },
-          { texto: "No existe alternativa manual viable", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 7, 
-        categoria: "Infraestructura TI", 
-        pregunta: "¿Depende el proceso de una arquitectura local (On-premise), híbrida o en la nube, y existe redundancia configurada para los servidores que lo soportan?", 
-        opciones: [
-          { texto: "Redundancia Total (Activo-Activo)", valor: 1.0 },
-          { texto: "Redundancia Parcial (Activo-Pasivo)", valor: 0.5 },
-          { texto: "Soporte simple sin redundancia", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 8, 
-        categoria: "Ecosistema de Sistemas", 
-        pregunta: "¿Cuántas aplicaciones críticas e interfaces de integración (API, ETL) participan en el flujo de datos necesario para completar el proceso?", 
-        opciones: [
-          { texto: "Simple (1 sistema centralizado)", valor: 1.0 },
-          { texto: "Intermedio (2 a 4 sistemas)", valor: 0.5 },
-          { texto: "Ecosistema complejo (>5 sistemas)", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 9, 
-        categoria: "Puntos de Falla TI", 
-        pregunta: "Si el sistema central (ERP/Core) queda fuera de línea, ¿el proceso cuenta con una base de datos local o caché que permita seguir operando temporalmente?", 
-        opciones: [
-          { texto: "Permite operación autónoma temporal", valor: 1.0 },
-          { texto: "Permite solo consultas", valor: 0.5 },
-          { texto: "El proceso se detiene de inmediato", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 10, 
-        categoria: "Dependencia de Terceros", 
-        pregunta: "¿El proceso requiere obligatoriamente servicios de terceros (SaaS, Outsourcing, Mensajería) para que se considere finalizado correctamente?", 
-        opciones: [
-          { texto: "Sin dependencia de terceros", valor: 1.0 },
-          { texto: "Dependencia moderada (soporte)", valor: 0.5 },
-          { texto: "Dependencia crítica de terceros", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 11, 
-        categoria: "Gobernanza de Proveedores", 
-        pregunta: "¿Cuenta con contratos de soporte y mantenimiento (SLA) vigentes con los proveedores críticos que soportan este proceso?", 
-        opciones: [
-          { texto: "SLA formal y penalidades definidas", valor: 1.0 },
-          { texto: "Acuerdo básico de soporte", valor: 0.5 },
-          { texto: "Sin contratos de soporte vigentes", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 12, 
-        categoria: "Riesgo de Concentración", 
-        pregunta: "Si su proveedor principal de nube o infraestructura fallara globalmente, ¿tiene una estrategia de salida o multicloud que permita migrar el proceso?", 
-        opciones: [
-          { texto: "Estrategia de salida probada", valor: 1.0 },
-          { texto: "Plan de migración teórico", valor: 0.5 },
-          { texto: "Dependencia total (Lock-in)", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 13, 
-        categoria: "Factor Humano Crítico", 
-        pregunta: "¿Existen 'Especialistas Únicos' que poseen conocimiento exclusivo del proceso sin el cual este no podría ejecutarse o recuperarse?", 
-        opciones: [
-          { texto: "Conocimiento distribuido y documentado", valor: 1.0 },
-          { texto: "Dependencia de un equipo pequeño", valor: 0.5 },
-          { texto: "Dependencia total de una persona", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 14, 
-        categoria: "Transferencia de Conocimiento", 
-        pregunta: "¿Existe un plan de sucesión o rotación de cargos que asegure que al menos dos personas conozcan la ejecución técnica del proceso?", 
-        opciones: [
-          { texto: "Sí, plan de sucesión activo", valor: 1.0 },
-          { texto: "Parcial, entrenamiento cruzado básico", valor: 0.5 },
-          { texto: "No, el conocimiento está en silos", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 15, 
-        categoria: "Calidad de Documentación", 
-        pregunta: "¿La documentación técnica (diagramas de arquitectura, diccionarios de datos) es suficiente para que un consultor externo pueda operar el proceso?", 
-        opciones: [
-          { texto: "Documentación completa y profesional", valor: 1.0 },
-          { texto: "Parcial, requiere guía del titular", valor: 0.5 },
-          { texto: "No existe documentación técnica", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 16, 
-        categoria: "Efecto Cascada", 
-        pregunta: "¿Este proceso es el disparador (Trigger) de otros procesos críticos de la cadena de valor, como facturación, despachos o pagos?", 
-        opciones: [
-          { texto: "Impacto limitado a su área", valor: 1.0 },
-          { texto: "Impacta procesos adyacentes importantes", valor: 0.5 },
-          { texto: "Es el Core: detiene toda la cadena", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 17, 
-        categoria: "Riesgo de Datos", 
-        pregunta: "Si el proceso falla, ¿existe riesgo de pérdida de integridad de los datos (corrupción de BD) que afecte a otros módulos de la empresa?", 
-        opciones: [
-          { texto: "Bajo riesgo: datos aislados", valor: 1.0 },
-          { texto: "Riesgo moderado de pérdida de registros", valor: 0.5 },
-          { texto: "Riesgo alto de desincronización masiva", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 18, 
-        categoria: "Monitoreo de Salud", 
-        pregunta: "¿Se cuenta con tableros de control (Dashboards) o alertas automáticas que informen en tiempo real cuando el proceso se degrada?", 
-        opciones: [
-          { texto: "Monitoreo Proactivo y Alertas", valor: 1.0 },
-          { texto: "Monitoreo Reactivo manual", valor: 0.5 },
-          { texto: "Sin monitoreo del proceso", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 19, 
-        categoria: "Gestión de Crisis", 
-        pregunta: "¿Está definido el comité de crisis y los protocolos de escalamiento para cuando este proceso supera su tiempo de tolerancia?", 
-        opciones: [
-          { texto: "Protocolos claros y comité definido", valor: 1.0 },
-          { texto: "Solo escalamiento jerárquico básico", valor: 0.5 },
-          { texto: "No hay protocolo de crisis definido", valor: 0.0 },
-          NA_OPTION
-        ] 
-      },
-      { 
-        id: 20, 
-        categoria: "Evaluación Residual", 
-        pregunta: "Considerando controles actuales, redundancias y planes de respaldo, ¿cuál es su percepción final de riesgo de este proceso?", 
-        opciones: [
-          { texto: "Riesgo Controlado", valor: 1.0 },
-          { texto: "Riesgo Aceptable", valor: 0.7 },
-          { texto: "Riesgo Alto", valor: 0.3 },
-          { texto: "Riesgo Crítico", valor: 0.0 },
-          NA_OPTION
-        ] 
-      }
-    ]
-  },
-  {
     id: 'CIBER',
-    name: 'Ciberseguridad (CIS Controls IG1)',
+    name: 'Ciberseguridad',
     description: 'Auditoría exhaustiva de los 18 Controles Críticos de CIS (Implementation Group 1) desglosados en 43 salvaguardas esenciales.',
     objetivo: 'Evaluar la robustez de la higiene técnica y la madurez defensiva. Se basa en los controles internacionales más efectivos para mitigar ataques de alto impacto (Ransomware/Phishing), asegurando que la infraestructura digital sea capaz de resistir y recuperarse de incidentes.',
     icon: 'ShieldCheck',
@@ -302,7 +69,7 @@ export const MODULES: ModuleData[] = [
   },
   {
     id: 'LEGAL',
-    name: 'Protección de Datos (Ley 21.719)',
+    name: 'Protección de Datos',
     description: 'Cumplimiento normativo del nuevo marco legal chileno de protección de la vida privada y datos personales.',
     objetivo: 'Medir el grado de defendibilidad jurídica ante el tratamiento de datos personales. Busca acreditar la licitud, el cumplimiento de derechos de titulares y la capacidad de notificación oportuna, protegiendo a la organización ante multas severas y riesgos reputacionales.',
     icon: 'Scale',
@@ -343,7 +110,7 @@ export const MODULES: ModuleData[] = [
   },
   {
     id: 'INFRA',
-    name: 'Continuidad Operacional (Infraestructura)',
+    name: 'Continuidad del Negocio',
     description: 'Resiliencia de la infraestructura física, ambiental y eléctrica para soportar la operación crítica.',
     objetivo: 'Garantizar la resiliencia del entorno físico y lógico que soporta el proceso. Evalúa la redundancia eléctrica, climatización, seguridad física de salas de datos y conectividad, asegurando que el negocio no se detenga por fallas en los cimientos tecnológicos.',
     icon: 'Server',
@@ -372,12 +139,25 @@ export const MODULES: ModuleData[] = [
       { id: 22, categoria: "Respaldos", peso: 9, pregunta: "¿La organización mantiene respaldos de los datos críticos en la nube, almacenados fuera de la sala de datos, que permitan la recuperación de la información ante incendios, robos o pérdida total del sitio?" },
       { id: 23, categoria: "Respaldos", peso: 8, pregunta: "¿Los respaldos, tanto locales como en la nube, se encuentran cifrados en tránsito y en reposo, con controles de acceso que impidan su eliminación, modificación o uso no autorizado?" },
       { id: 24, categoria: "Videovigilancia", peso: 8, pregunta: "¿El sistema de cámaras de seguridad (CCTV) cuenta con una red dedicada o segmentada, enlaces estables y respaldo eléctrico que aseguren la transmisión continua de las imágenes aun ante incidentes eléctricos o de red?" },
-      { id: 25, categoria: "Videovigilancia", peso: 9, pregunta: "¿Las grabaciones de CCTV se almacenan en NVR/DVR protegidos físicamente, con retención definida y respaldo (local o en la nube), permitiendo su recuperación ante fallas, robos o incidentes?" }
+      { id: 25, categoria: "Videovigilancia", peso: 9, pregunta: "¿Las grabaciones de CCTV se almacenan en NVR/DVR protegidos físicamente, con retención definida y respaldo (local o en la nube), permitiendo su recuperación ante fallas, robos o incidentes?" },
+      { id: 26, categoria: "Análisis de Impacto (BIA)", peso: 6, pregunta: "¿Se encuentra el proceso formalmente documentado en un manual de procedimientos vigente, incluyendo el diagrama de flujo, las entradas, salidas y los indicadores clave de desempeño (KPI)?", opciones: [{ texto: "Sí, documentado y vigente", valor: 1.0 }, { texto: "Parcialmente, existe flujo pero no manual", valor: 0.5 }, { texto: "No existe documentación formal", valor: 0.0 }, NA_OPTION] },
+      { id: 27, categoria: "Análisis de Impacto (BIA)", peso: 6, pregunta: "¿Existe una matriz de responsabilidades (RACI) que identifique claramente quién es el dueño del proceso (Process Owner) y quiénes son los responsables de su ejecución y supervisión?", opciones: [{ texto: "Sí, matriz RACI definida", valor: 1.0 }, { texto: "Solo responsables nombrados de palabra", valor: 0.5 }, { texto: "No hay responsables definidos", valor: 0.0 }, NA_OPTION] },
+      { id: 28, categoria: "Análisis de Impacto (BIA)", peso: 8, pregunta: "¿Cuál es el impacto directo en la continuidad del negocio si este proceso fallara durante un periodo de alta demanda estacional?", opciones: [{ texto: "Bajo: Impacto despreciable", valor: 1.0 }, { texto: "Medio: Impacto operativo recuperable", valor: 0.6 }, { texto: "Alto: Afecta significativamente la entrega", valor: 0.3 }, { texto: "Crítico: Cese total de la operación principal", valor: 0.0 }, NA_OPTION] },
+      { id: 29, categoria: "Análisis de Impacto (BIA)", peso: 7, pregunta: "¿En qué medida la falla de este proceso afectaría la imagen pública, la confianza de los clientes o generaría multas por incumplimiento de niveles de servicio (SLA)?", opciones: [{ texto: "Bajo: Sin impacto externo", valor: 1.0 }, { texto: "Moderado: Quejas internas o de partners", valor: 0.6 }, { texto: "Significativo: Afecta confianza pública", valor: 0.3 }, { texto: "Extremo: Pérdida masiva de clientes/Imagen", valor: 0.0 }, NA_OPTION] },
+      { id: 30, categoria: "Análisis de Impacto (BIA)", peso: 9, pregunta: "¿Cuál es el tiempo objetivo de recuperación (RTO) máximo definido antes de que la interrupción cause un daño irreversible o financiero inasumible?", opciones: [{ texto: "Diferible: Más de una semana", valor: 1.0 }, { texto: "Necesario: Entre 1 y 3 días", valor: 0.6 }, { texto: "Urgente: Entre 4 y 24 horas", valor: 0.3 }, { texto: "Crítico: Menos de 4 horas", valor: 0.0 }, NA_OPTION] },
+      { id: 31, categoria: "Análisis de Impacto (BIA)", peso: 9, pregunta: "¿Cuenta el proceso con un Plan de Continuidad (BCP) que incluya procedimientos de operación en \'modo degradado\' o manual sin depender de sistemas TI?", opciones: [{ texto: "Sí, probado y documentado", valor: 1.0 }, { texto: "Parcial, se conoce pero no se ha probado", valor: 0.5 }, { texto: "No existe alternativa manual viable", valor: 0.0 }, NA_OPTION] },
+      { id: 32, categoria: "Análisis de Impacto (BIA)", peso: 7, pregunta: "¿Depende el proceso de una arquitectura local (On-premise), híbrida o en la nube, y existe redundancia configurada para los servidores que lo soportan?", opciones: [{ texto: "Redundancia Total (Activo-Activo)", valor: 1.0 }, { texto: "Redundancia Parcial (Activo-Pasivo)", valor: 0.5 }, { texto: "Soporte simple sin redundancia", valor: 0.0 }, NA_OPTION] },
+      { id: 33, categoria: "Análisis de Impacto (BIA)", peso: 5, pregunta: "¿Cuántas aplicaciones críticas e interfaces de integración (API, ETL) participan en el flujo de datos necesario para completar el proceso?", opciones: [{ texto: "Simple (1 sistema centralizado)", valor: 1.0 }, { texto: "Intermedio (2 a 4 sistemas)", valor: 0.5 }, { texto: "Ecosistema complejo (>5 sistemas)", valor: 0.0 }, NA_OPTION] },
+      { id: 34, categoria: "Análisis de Impacto (BIA)", peso: 7, pregunta: "Si el sistema central (ERP/Core) queda fuera de línea, ¿el proceso cuenta con una base de datos local o caché que permita seguir operando temporalmente?", opciones: [{ texto: "Permite operación autónoma temporal", valor: 1.0 }, { texto: "Permite solo consultas", valor: 0.5 }, { texto: "El proceso se detiene de inmediato", valor: 0.0 }, NA_OPTION] },
+      { id: 35, categoria: "Análisis de Impacto (BIA)", peso: 7, pregunta: "¿Este proceso es el disparador (Trigger) de otros procesos críticos de la cadena de valor, como facturación, despachos o pagos?", opciones: [{ texto: "Impacto limitado a su área", valor: 1.0 }, { texto: "Impacta procesos adyacentes importantes", valor: 0.5 }, { texto: "Es el Core: detiene toda la cadena", valor: 0.0 }, NA_OPTION] },
+      { id: 36, categoria: "Análisis de Impacto (BIA)", peso: 7, pregunta: "Si el proceso falla, ¿existe riesgo de pérdida de integridad de los datos (corrupción de BD) que afecte a otros módulos de la empresa?", opciones: [{ texto: "Bajo riesgo: datos aislados", valor: 1.0 }, { texto: "Riesgo moderado de pérdida de registros", valor: 0.5 }, { texto: "Riesgo alto de desincronización masiva", valor: 0.0 }, NA_OPTION] },
+      { id: 37, categoria: "Análisis de Impacto (BIA)", peso: 7, pregunta: "¿Se cuenta con tableros de control (Dashboards) o alertas automáticas que informen en tiempo real cuando el proceso se degrada?", opciones: [{ texto: "Monitoreo Proactivo y Alertas", valor: 1.0 }, { texto: "Monitoreo Reactivo manual", valor: 0.5 }, { texto: "Sin monitoreo del proceso", valor: 0.0 }, NA_OPTION] },
+      { id: 38, categoria: "Análisis de Impacto (BIA)", peso: 8, pregunta: "¿Está definido el comité de crisis y los protocolos de escalamiento para cuando este proceso supera su tiempo de tolerancia?", opciones: [{ texto: "Protocolos claros y comité definido", valor: 1.0 }, { texto: "Solo escalamiento jerárquico básico", valor: 0.5 }, { texto: "No hay protocolo de crisis definido", valor: 0.0 }, NA_OPTION] }
     ]
   },
   {
     id: 'VENDOR',
-    name: 'Proveedores (Cadena de Suministro)',
+    name: 'Cadena de Suministro',
     description: 'Análisis de dependencia estratégica, financiera y técnica de socios tecnológicos externos.',
     objetivo: 'Analizar los riesgos en la cadena de suministro digital y la dependencia de terceros (SaaS/Cloud). El foco está en asegurar la portabilidad de los datos, la existencia de cláusulas de salida claras y la continuidad del servicio si el proveedor crítico falla.',
     icon: 'Truck',
@@ -406,7 +186,7 @@ export const MODULES: ModuleData[] = [
   },
   {
     id: 'PEOPLE',
-    name: 'Dependencia Crítica de Personas',
+    name: 'Dependencia Humana',
     description: 'Identificación de riesgos derivados de la gestión del talento y roles clave.',
     objetivo: 'Identificar la dependencia de conocimiento crítico no documentado y roles exclusivos. Su fin es mitigar el "Punto Único de Falla Humano", asegurando que el proceso pueda ejecutarse ante la ausencia de personas clave mediante planes de sucesión y transferencia de know-how.',
     icon: 'Users',
