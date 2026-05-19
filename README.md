@@ -2,21 +2,59 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# GRC Ciberseguridad y Protección de Datos
 
-This contains everything you need to run your app locally.
+Plataforma de evaluación GRC alineada a CIS Controls IG1, Ley 21.719 (Chile), ISO 22301 y gestión de riesgo de terceros y personas. Genera planes de acción accionables con IA vía OpenRouter.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1zSf4cs_PJQDlaf7p7oFC_1jP0900jd1X
+## Arquitectura
 
-## Run Locally
+- **Frontend**: Vite 6 + React 19 + TypeScript + Tailwind CSS (CDN)
+- **IA**: Nemotron 3 Super 120B (free) vía OpenRouter, llamado a través de una función serverless de Vercel para proteger la API key
+- **Persistencia**: localStorage (sin backend, evaluaciones por dispositivo)
+- **Export**: PDF nativo con jsPDF (sin html2canvas)
 
-**Prerequisites:**  Node.js
+## Desarrollo local
 
+**Prerrequisitos**: Node.js 20+
 
-1. Install dependencies:
-   `npm install`
-2. Set the `OPENROUTER_API_KEY` in [.env.local](.env.local) to your OpenRouter API key (https://openrouter.ai/keys)
-3. Run the app:
-   `npm run dev`
+### Opción A: Frontend solo (sin función de IA)
 
-El análisis con IA usa el modelo gratuito `nvidia/nemotron-3-super-120b-a12b:free` vía OpenRouter.
+```bash
+npm install
+npm run dev
+```
+
+La app corre en `http://localhost:3000`. Todo funciona excepto el botón "Sintetizar Reporte" (la función `/api/analyze` solo existe en Vercel).
+
+### Opción B: Stack completo (con IA local)
+
+```bash
+npm install
+npx vercel dev    # emula Vercel localmente, incluye api/
+```
+
+Requiere `OPENROUTER_API_KEY` en `.env.local`:
+
+```
+OPENROUTER_API_KEY=sk-or-v1-...
+```
+
+## Deploy a Vercel
+
+1. Conecta el repo en https://vercel.com/new
+2. Framework preset: **Vite** (autodetectado)
+3. Environment Variables → agregar `OPENROUTER_API_KEY` con tu key de https://openrouter.ai/keys
+4. Deploy. La función `/api/analyze` se publica automáticamente desde `api/analyze.ts`.
+
+### Conectar dominio de Hostinger
+
+1. En Hostinger DNS, crear registro `CNAME`:
+   - **Tipo**: CNAME
+   - **Nombre**: `grc` (o el subdominio que quieras)
+   - **Valor**: `cname.vercel-dns.com`
+2. En Vercel: Settings → Domains → agregar `grc.tu-dominio.com`
+3. Vercel emite el certificado SSL automáticamente en ~1 minuto.
+
+## Seguridad
+
+La API key de OpenRouter **nunca** se inyecta en el bundle del navegador. Solo vive en las variables de entorno del servidor (Vercel) y la consume la Edge Function `api/analyze.ts`.

@@ -165,12 +165,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, aiAnalysis, onAiAn
   const runAiAnalysis = async () => {
     setIsAnalyzing(true);
     try {
-      const apiKey = process.env.OPENROUTER_API_KEY;
-      if (!apiKey) {
-        setAiAnalysis('Error: OPENROUTER_API_KEY no está configurada en .env.local');
-        return;
-      }
-
       const moduleSummaries = scores.map(s => {
         const cats = getCategoryScores(s.id as ModuleId, state.answers, MODULES);
         const worstCats = cats
@@ -229,33 +223,21 @@ Genera un plan de acción con esta estructura exacta:
 
 Sé directo, técnico y específico. No uses generalidades. Máximo 800 palabras.`;
 
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const response = await fetch('/api/analyze', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'GRC Master Enterprise',
-        },
-        body: JSON.stringify({
-          model: 'nvidia/nemotron-3-super-120b-a12b:free',
-          messages: [
-            { role: 'system', content: systemMessage },
-            { role: 'user', content: userMessage },
-          ],
-          max_tokens: 8000,
-          reasoning: { effort: 'low' },
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemMessage, userMessage }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errText}`);
+        throw new Error(data?.error || `HTTP ${response.status}`);
       }
 
-      const data = await response.json();
-      const text = data.choices?.[0]?.message?.content;
-      const finishReason = data.choices?.[0]?.finish_reason;
+      const text: string | null = data?.text ?? null;
+      const finishReason: string | null = data?.finishReason ?? null;
+
       if (!text || text.trim() === '') {
         setAiAnalysis(
           finishReason === 'length'
