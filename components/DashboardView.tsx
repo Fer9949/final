@@ -239,6 +239,8 @@ Sé directo, técnico y específico. No uses generalidades. Máximo 800 palabras
             { role: 'system', content: systemMessage },
             { role: 'user', content: userMessage },
           ],
+          max_tokens: 8000,
+          reasoning: { effort: 'low' },
         }),
       });
 
@@ -249,7 +251,16 @@ Sé directo, técnico y específico. No uses generalidades. Máximo 800 palabras
 
       const data = await response.json();
       const text = data.choices?.[0]?.message?.content;
-      setAiAnalysis(text || 'No se pudo generar el análisis.');
+      const finishReason = data.choices?.[0]?.finish_reason;
+      if (!text || text.trim() === '') {
+        setAiAnalysis(
+          finishReason === 'length'
+            ? 'El modelo agotó su presupuesto de tokens razonando sin alcanzar a responder. Intenta de nuevo.'
+            : 'El modelo no devolvió contenido. Intenta de nuevo.'
+        );
+      } else {
+        setAiAnalysis(text);
+      }
     } catch (error) {
       setAiAnalysis(`Error al conectar con la IA: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
