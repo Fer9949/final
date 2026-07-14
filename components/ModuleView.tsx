@@ -119,14 +119,11 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, onAnswer, onBa
       : 'bg-red-50 text-red-700 border-red-100 hover:bg-red-100 hover:border-red-200';
   };
 
-  const auditLevels = [
-    { label: '0%: No Cumple', value: 0.0 },
-    { label: '25%: En Desarrollo', value: 0.25 },
-    { label: '50%: Parcialmente', value: 0.5 },
-    { label: '75%: Adecuado', value: 0.75 },
-    { label: '100%: Total', value: 1.0 },
-    { label: 'N/A', value: -1 }
-  ];
+  const infraccionStyle: Record<string, string> = {
+    'leve': 'bg-teal-50 text-teal-700 border-teal-100',
+    'grave': 'bg-amber-50 text-amber-700 border-amber-100',
+    'gravísima': 'bg-rose-50 text-rose-700 border-rose-100'
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
@@ -167,7 +164,6 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, onAnswer, onBa
       <div className="grid gap-6">
         {module.questions.map((q, idx) => {
           const currentAnswer = answers[`${module.id}_${q.id}`];
-          const hasCustomOptions = q.opciones && q.opciones.length > 0;
 
           return (
             <div key={q.id} className={`bg-white rounded-3xl p-8 shadow-sm border transition-all duration-300 ${currentAnswer ? 'border-slate-200' : 'border-slate-100 hover:border-indigo-50'}`}>
@@ -185,61 +181,49 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, onAnswer, onBa
                 
                 <div className="flex-1 space-y-6">
                   <div>
-                    {q.categoria && <span className="inline-block px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase mb-2 tracking-wider">{q.categoria}</span>}
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      {q.categoria && <span className="inline-block px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-wider">{q.categoria}</span>}
+                      {q.referencia && <span className="inline-block px-2.5 py-1 bg-violet-50 text-violet-600 rounded-lg text-[10px] font-bold tracking-wide border border-violet-100">{q.referencia}</span>}
+                      {q.infraccion && <span className={`inline-block px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${infraccionStyle[q.infraccion]}`}>Infracción {q.infraccion}</span>}
+                    </div>
                     <h4 className="text-slate-800 text-lg font-semibold leading-relaxed tracking-tight">{q.pregunta}</h4>
+                    {q.guia && (
+                      <div className="mt-4 flex items-start gap-3 bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4">
+                        <svg className="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <p className="text-sm text-slate-500 leading-relaxed">
+                          <span className="font-black text-[10px] uppercase tracking-widest text-indigo-500 block mb-1">Guía para el auditor</span>
+                          {q.guia}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-4">
-                    {hasCustomOptions ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {q.opciones?.map((opt, i) => {
-                          const label = typeof opt === 'string' ? opt : opt.texto;
-                          const value = typeof opt === 'string' 
-                            ? 1 - (i / ((q.opciones?.length || 1) - 1)) 
-                            : opt.valor;
-                          const isSelected = currentAnswer?.label === label;
-                          const colorClass = getColorClass(value, isSelected);
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {q.opciones?.map((opt, i) => {
+                        const label = typeof opt === 'string' ? opt : opt.texto;
+                        const value = typeof opt === 'string'
+                          ? 1 - (i / ((q.opciones?.length || 1) - 1))
+                          : opt.valor;
+                        const isSelected = currentAnswer?.label === label;
+                        const colorClass = getColorClass(value, isSelected);
 
-                          return (
-                            <button
-                              key={i}
-                              onClick={() => handleSelection(q.id, value, label)}
-                              className={`text-left px-5 py-4 rounded-2xl border transition-all duration-200 text-sm ${colorClass} ${isSelected ? 'scale-[1.02] shadow-xl z-10 font-bold' : 'hover:translate-x-1'}`}
-                            >
-                              <div className="flex items-center justify-between gap-3">
-                                <span>{label}</span>
-                                {isSelected && (
-                                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                                )}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="w-full">
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                          {auditLevels.map((level, i) => {
-                            const isSelected = currentAnswer?.value === level.value;
-                            const colorClass = getColorClass(level.value, isSelected);
-                            return (
-                              <button
-                                key={i}
-                                onClick={() => handleSelection(q.id, level.value, level.label)}
-                                className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all h-20 ${colorClass} ${isSelected ? 'scale-110 shadow-xl z-10 font-bold ring-4 ring-offset-4 ring-white' : 'opacity-80 hover:opacity-100'}`}
-                              >
-                                <span className="text-[10px] font-black uppercase tracking-tighter text-center leading-none mb-1">
-                                  {level.label.split(':')[0]}
-                                </span>
-                                <span className="text-[9px] font-medium leading-tight text-center truncate w-full">
-                                  {level.label.split(':')[1] || level.label}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => handleSelection(q.id, value, label)}
+                            className={`text-left px-5 py-4 rounded-2xl border transition-all duration-200 text-sm ${colorClass} ${isSelected ? 'scale-[1.02] shadow-xl z-10 font-bold' : 'hover:translate-x-1'}`}
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <span>{label}</span>
+                              {isSelected && (
+                                <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {/* Evidence Section */}

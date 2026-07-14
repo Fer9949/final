@@ -12,6 +12,9 @@ export interface Question {
   pregunta: string;
   opciones?: string[] | Option[];
   peso?: number;
+  guia?: string;        // Guía para el auditor: qué evaluar, evidencia a solicitar y por qué importa
+  referencia?: string;  // Referencia legal que la pregunta operacionaliza (módulo LEGAL/MPI)
+  infraccion?: 'leve' | 'grave' | 'gravísima'; // Clase de infracción que gatilla su incumplimiento
 }
 
 export interface ModuleData {
