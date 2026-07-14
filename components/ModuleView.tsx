@@ -226,6 +226,33 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, onAnswer, onBa
                     </div>
                   </div>
 
+                  {/* Justificación del auditor */}
+                  {currentAnswer && (() => {
+                    const isGap = currentAnswer.value !== -1 && currentAnswer.value < 0.7;
+                    const missing = isGap && !(currentAnswer.justificacion || '').trim();
+                    return (
+                      <div className={`rounded-2xl border p-5 transition-all ${missing ? 'border-red-200 bg-red-50/40' : 'border-slate-100 bg-slate-50/40'}`}>
+                        <div className="flex items-center justify-between gap-3 mb-3">
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${missing ? 'text-red-500' : 'text-slate-400'}`}>
+                            Justificación del auditor
+                          </span>
+                          {isGap && (
+                            <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${missing ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-700'}`}>
+                              {missing ? 'Obligatoria: esta respuesta es una brecha' : 'Brecha justificada ✓'}
+                            </span>
+                          )}
+                        </div>
+                        <textarea
+                          value={currentAnswer.justificacion || ''}
+                          onChange={(e) => onAnswer({ ...currentAnswer, justificacion: e.target.value })}
+                          placeholder="¿Qué observó? ¿Qué evidencia respalda esta respuesta? Este texto sustenta el hallazgo en el reporte y alimenta el plan de acción de la IA."
+                          rows={2}
+                          className={`w-full text-sm text-slate-700 bg-white rounded-xl border p-4 outline-none transition-all resize-y placeholder:text-slate-300 placeholder:italic focus:ring-2 ${missing ? 'border-red-200 focus:ring-red-100' : 'border-slate-200 focus:ring-indigo-100 focus:border-indigo-300'}`}
+                        />
+                      </div>
+                    );
+                  })()}
+
                   {/* Evidence Section */}
                   <div className={`pt-6 border-t border-slate-50 transition-all ${!currentAnswer ? 'opacity-30 grayscale pointer-events-none' : 'opacity-100'}`}>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">

@@ -1,5 +1,126 @@
 
-import { Answer, ModuleData, ModuleId, Question } from '../types';
+import { Answer, BaselineSnapshot, ModuleData, ModuleId, Question } from '../types';
+
+// Umbral bajo el cual una respuesta se considera brecha (hallazgo)
+export const GAP_THRESHOLD = 0.7;
+
+export const isGapValue = (value: number) => value !== -1 && value < GAP_THRESHOLD;
+
+export interface GapMovement {
+  moduleId: ModuleId;
+  moduleName: string;
+  questionId: number;
+  text: string;
+  peso: number;
+  infraccion?: string;
+  fromLabel: string;
+  toLabel: string;
+  fromValue: number;
+  toValue: number;
+}
+
+export interface ModuleGapProgress {
+  moduleId: ModuleId;
+  moduleName: string;
+  baselineGaps: number;
+  closed: number;
+}
+
+export interface GapProgress {
+  baselineDate: string;
+  baselineGaps: number;      // brechas detectadas en la línea base
+  closed: number;            // cerradas (ahora >= umbral)
+  open: number;              // siguen abiertas
+  pctWeighted: number;       // avance ponderado por peso de pregunta (0-100)
+  regressed: GapMovement[];  // nuevas brechas o que retrocedieron desde la base
+  closedList: GapMovement[];
+  byModule: ModuleGapProgress[];
+  // Exposición sancionatoria (módulo MPI): brechas por clase de infracción
+  mpi: { clase: string; abiertas: number; cerradas: number }[];
+}
+
+export const getGapProgress = (
+  baseline: BaselineSnapshot,
+  answers: Record<string, Answer>,
+  modules: ModuleData[]
+): GapProgress => {
+  let baselineGaps = 0, closed = 0, open = 0;
+  let weightTotal = 0, weightClosed = 0;
+  const closedList: GapMovement[] = [];
+  const regressed: GapMovement[] = [];
+  const byModule: ModuleGapProgress[] = [];
+  const mpiMap = new Map<string, { abiertas: number; cerradas: number }>();
+
+  for (const mod of modules) {
+    let modBase = 0, modClosed = 0;
+    for (const q of mod.questions) {
+      const key = `${mod.id}_${q.id}`;
+      const base = baseline.answers[key];
+      const cur = answers[key];
+      const peso = q.peso || 1;
+
+      const wasGap = !!base && isGapValue(base.value);
+      const isNowGap = !!cur && isGapValue(cur.value);
+      const isNowOk = !!cur && cur.value !== -1 && cur.value >= GAP_THRESHOLD;
+
+      const movement = (): GapMovement => ({
+        moduleId: mod.id, moduleName: mod.name, questionId: q.id,
+        text: q.pregunta, peso, infraccion: q.infraccion,
+        fromLabel: base ? base.label : 'Sin responder',
+        toLabel: cur ? cur.label : 'Sin responder',
+        fromValue: base ? base.value : 0,
+        toValue: cur ? cur.value : 0
+      });
+
+      if (wasGap) {
+        baselineGaps++; modBase++; weightTotal += peso;
+        if (isNowOk) { closed++; modClosed++; weightClosed += peso; closedList.push(movement()); }
+        else { open++; }
+      } else if (isNowGap) {
+        // brecha nueva o que retrocedió respecto de la línea base
+        regressed.push(movement());
+      }
+
+      // Exposición sancionatoria del módulo MPI
+      if (q.infraccion && isNowGap) {
+        const e = mpiMap.get(q.infraccion) || { abiertas: 0, cerradas: 0 };
+        e.abiertas++; mpiMap.set(q.infraccion, e);
+      }
+      if (q.infraccion && wasGap && isNowOk) {
+        const e = mpiMap.get(q.infraccion) || { abiertas: 0, cerradas: 0 };
+        e.cerradas++; mpiMap.set(q.infraccion, e);
+      }
+    }
+    if (modBase > 0) byModule.push({ moduleId: mod.id, moduleName: mod.name, baselineGaps: modBase, closed: modClosed });
+  }
+
+  const orden = ['gravísima', 'grave', 'leve'];
+  const mpi = orden.filter(c => mpiMap.has(c)).map(c => ({ clase: c, ...mpiMap.get(c)! }));
+
+  return {
+    baselineDate: baseline.date,
+    baselineGaps, closed, open,
+    pctWeighted: weightTotal > 0 ? (weightClosed / weightTotal) * 100 : 0,
+    regressed, closedList, byModule, mpi
+  };
+};
+
+// Justificaciones pendientes: respuestas que son brecha y no tienen sustento del auditor
+export const getPendingJustifications = (
+  answers: Record<string, Answer>,
+  modules: ModuleData[]
+): { moduleName: string; questionId: number }[] => {
+  const pending: { moduleName: string; questionId: number }[] = [];
+  for (const mod of modules) {
+    for (const q of mod.questions) {
+      const ans = answers[`${mod.id}_${q.id}`];
+      if (ans && isGapValue(ans.value) && !(ans.justificacion || '').trim()) {
+        pending.push({ moduleName: mod.name, questionId: q.id });
+      }
+    }
+  }
+  return pending;
+};
 
 export const calculateModuleScore = (moduleId: ModuleId, answers: Record<string, Answer>, modules: ModuleData[]) => {
   const module = modules.find(m => m.id === moduleId);

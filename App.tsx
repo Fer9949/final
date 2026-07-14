@@ -3,7 +3,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import { GRCState, Answer, ModuleId, EvaluationMetadata } from './types';
 import { MODULES, ICONS, PROCESS_TYPES } from './constants';
-import { calculateModuleScore, getTopModuleGaps, getCategoryScores, getScoreLevel1000 } from './utils/scoring';
+import { calculateModuleScore, getTopModuleGaps, getCategoryScores, getScoreLevel1000, getPendingJustifications } from './utils/scoring';
 import DashboardView from './components/DashboardView';
 import ModuleView from './components/ModuleView';
 import HomeView from './components/HomeView';
@@ -98,8 +98,82 @@ const App: React.FC = () => {
     }));
   };
 
+  // ── GUARDAR / CARGAR EVALUACIÓN (archivo .json) ──
+  const handleSaveJSON = useCallback(() => {
+    const payload = {
+      app: 'grc-ciberlex',
+      version: 2,
+      savedAt: new Date().toISOString(),
+      state,
+      aiAnalysis
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const proceso = (state.metadata.processName || 'evaluacion').replace(/[^\w\sáéíóúñ-]/gi, '').replace(/\s+/g, '-').toLowerCase();
+    a.href = url;
+    a.download = `grc-${proceso}-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [state, aiAnalysis]);
+
+  const handleLoadJSON = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json,.json';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(String(reader.result));
+          const loaded = parsed?.state;
+          if (parsed?.app !== 'grc-ciberlex' || !loaded?.answers || !loaded?.metadata) {
+            alert('El archivo no es una evaluación GRC Ciberlex válida.');
+            return;
+          }
+          if (!confirm(`Cargar la evaluación "${loaded.metadata.processName || 'sin nombre'}" (${loaded.metadata.date}). La evaluación actual será reemplazada. ¿Continuar?`)) return;
+          setState({ ...defaultState, ...loaded, activeModule: 'DASHBOARD', metadata: { ...defaultState.metadata, ...loaded.metadata } });
+          setAiAnalysis(typeof parsed.aiAnalysis === 'string' ? parsed.aiAnalysis : null);
+        } catch {
+          alert('No se pudo leer el archivo: formato inválido.');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }, []);
+
+  // ── LÍNEA BASE para medir avance en cierre de brechas ──
+  const handleSetBaseline = useCallback(() => {
+    const answered = Object.keys(state.answers).length;
+    if (answered === 0) {
+      alert('Responda al menos una pregunta antes de fijar la línea base.');
+      return;
+    }
+    if (state.baseline && !confirm('Ya existe una línea base fijada el ' + state.baseline.date + '. ¿Reemplazarla por el estado actual?')) return;
+    const snapshot: Record<string, { value: number; label: string }> = {};
+    Object.entries(state.answers).forEach(([k, a]) => { snapshot[k] = { value: a.value, label: a.label }; });
+    setState(prev => ({
+      ...prev,
+      baseline: {
+        date: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }),
+        answers: snapshot
+      }
+    }));
+  }, [state.answers, state.baseline]);
+
   // ── LÓGICA EXPORTAR PDF (jsPDF puro, sin html2canvas) ──
   const handleExportPDF = useCallback(() => {
+    // Toda brecha (respuesta < 0.7) debe tener justificación del auditor antes de emitir el reporte
+    const pendientes = getPendingJustifications(state.answers, MODULES);
+    if (pendientes.length > 0) {
+      const detalle = pendientes.slice(0, 8).map(p => `• ${p.moduleName} — pregunta ${p.questionId}`).join('\n');
+      alert(`No se puede exportar el reporte: hay ${pendientes.length} brecha(s) sin justificación del auditor.\n\nUn hallazgo sin sustento es indefendible. Complete la justificación en:\n\n${detalle}${pendientes.length > 8 ? `\n…y ${pendientes.length - 8} más.` : ''}`);
+      return;
+    }
+
     const M = 15;          // margen 15mm = 1.5cm
     const PW = 215.9;      // ancho hoja carta mm
     const PH = 279.4;      // alto hoja carta mm
@@ -412,14 +486,18 @@ const App: React.FC = () => {
         const riskLabel = riskPct === 100 ? 'CRÍTICO' : riskPct >= 60 ? 'ALTO' : 'MEDIO';
         const riskColor = riskPct === 100 ? RED : riskPct >= 60 ? ORANGE : YELLOW;
 
+        // Justificación del auditor (sustento del hallazgo)
+        const justif = (state.answers[`${s.id}_${gap.questionId}`]?.justificacion || '').trim();
+
         // Layout: fila 1 = badge CRÍTICO (izq) + FINDING-X (der) en la misma línea
         //         fila 2 = texto de la pregunta a ancho completo (sin competir con FINDING)
+        //         fila 2b = justificación del auditor (itálica) si existe
         //         fila 3 = barra de riesgo + porcentaje
-        // Esto garantiza que FINDING nunca se superpone con el texto.
         const textMaxW = CW - 4; // texto usa casi todo el ancho
         const lines = pdf.splitTextToSize(`${gap.text}`, textMaxW);
-        // altura: 7mm cabecera (badge+finding) + líneas de texto + 6mm barra
-        const neededH = 7 + lines.length * 4.5 + 7;
+        const justifLines = justif ? pdf.splitTextToSize(`Auditor: ${justif}`, textMaxW) : [];
+        // altura: 7mm cabecera + líneas de texto + justificación + 6mm barra
+        const neededH = 7 + lines.length * 4.5 + justifLines.length * 4 + (justifLines.length ? 2 : 0) + 7;
         checkY(neededH);
 
         // Fondo alternado
@@ -449,8 +527,16 @@ const App: React.FC = () => {
         pdf.setTextColor(...DARK);
         pdf.text(lines, M + 2, y + 9.5); // y+9.5 = debajo del badge
 
+        // ── FILA 2b: Justificación del auditor ──
+        if (justifLines.length) {
+          pdf.setFontSize(6.5);
+          pdf.setFont('helvetica', 'italic');
+          pdf.setTextColor(...SLATE);
+          pdf.text(justifLines, M + 2, y + 9.5 + lines.length * 4.5);
+        }
+
         // ── FILA 3: Barra de riesgo ──
-        const barY = y + 8 + lines.length * 4.5;
+        const barY = y + 8 + lines.length * 4.5 + justifLines.length * 4 + (justifLines.length ? 2 : 0);
         pdf.setFillColor(226, 232, 240);
         pdf.roundedRect(M + 2, barY, CW - 30, 2, 0.5, 0.5, 'F');
         pdf.setFillColor(...riskColor);
@@ -753,12 +839,28 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="flex space-x-3">
-             <button 
+             <button
               onClick={() => setState(s => ({ ...s, activeModule: 'HOME' }))}
               className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-xs font-black hover:bg-slate-50 transition-all shadow-sm text-slate-700 flex items-center gap-3 active:scale-95"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
               INICIO
+            </button>
+            <button
+              onClick={handleLoadJSON}
+              title="Cargar una evaluación guardada (.json)"
+              className="px-5 py-3 bg-white border border-slate-200 rounded-xl text-xs font-black hover:bg-slate-50 transition-all shadow-sm text-slate-700 flex items-center gap-2 active:scale-95"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              CARGAR
+            </button>
+            <button
+              onClick={handleSaveJSON}
+              title="Guardar la evaluación completa como archivo .json (respuestas, justificaciones, evidencia y línea base)"
+              className="px-5 py-3 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-800 transition-all shadow-sm flex items-center gap-2 active:scale-95"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+              GUARDAR
             </button>
             <button
               onClick={handleExportPDF}
@@ -779,6 +881,7 @@ const App: React.FC = () => {
                 onAiAnalysisChange={setAiAnalysis}
                 onSwitchModule={(id) => setState(s => ({...s, activeModule: id}))}
                 onGoHome={() => setState(s => ({...s, activeModule: 'HOME'}))}
+                onSetBaseline={handleSetBaseline}
               />
             </div>
           ) : (

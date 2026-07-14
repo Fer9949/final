@@ -41,6 +41,13 @@ export interface Answer {
   value: number; // 0 to 1
   label: string;
   evidence?: FileEvidence[];
+  justificacion?: string; // Observación del auditor que sustenta la respuesta (obligatoria en brechas)
+}
+
+// Foto congelada de una evaluación para medir avance en el cierre de brechas
+export interface BaselineSnapshot {
+  date: string;
+  answers: Record<string, { value: number; label: string }>;
 }
 
 export interface EvaluationMetadata {
@@ -56,4 +63,5 @@ export interface GRCState {
   answers: Record<string, Answer>; // key: moduleId_questionId
   activeModule: ModuleId | 'DASHBOARD' | 'HOME';
   metadata: EvaluationMetadata;
+  baseline?: BaselineSnapshot; // línea base para medir avance en cierre de brechas
 }

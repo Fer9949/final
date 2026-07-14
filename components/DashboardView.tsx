@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { GRCState, ModuleId } from '../types';
 import { MODULES, ICONS } from '../constants';
-import { calculateModuleScore, getScoreLevel1000, getTopModuleGaps, getCategoryScores, GapFinding } from '../utils/scoring';
+import { calculateModuleScore, getScoreLevel1000, getTopModuleGaps, getCategoryScores, getGapProgress, isGapValue, GapFinding } from '../utils/scoring';
 
 interface DashboardViewProps {
   state: GRCState;
@@ -13,6 +13,7 @@ interface DashboardViewProps {
   onAiAnalysisChange: (analysis: string | null) => void;
   onSwitchModule: (id: ModuleId) => void;
   onGoHome: () => void;
+  onSetBaseline: () => void;
 }
 
 // Utility to calculate precise SVG arc paths
@@ -132,7 +133,7 @@ const GapBadge: React.FC<{ value: number }> = ({ value }) => {
   return <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-md text-[9px] font-black uppercase">Medio</span>;
 };
 
-const DashboardView: React.FC<DashboardViewProps> = ({ state, aiAnalysis, onAiAnalysisChange, onSwitchModule, onGoHome }) => {
+const DashboardView: React.FC<DashboardViewProps> = ({ state, aiAnalysis, onAiAnalysisChange, onSwitchModule, onGoHome, onSetBaseline }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const setAiAnalysis = onAiAnalysisChange;
 
@@ -162,6 +163,16 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, aiAnalysis, onAiAn
     return totalPossible > 0 ? (currentTotal / totalPossible) * 100 : 0;
   }, [scores]);
 
+  // Brechas abiertas hoy (respuestas < 0.7, excluyendo N/A)
+  const openGapsNow = useMemo(() =>
+    Object.values(state.answers).filter(a => isGapValue(a.value)).length
+  , [state.answers]);
+
+  // Avance en cierre de brechas contra la línea base
+  const gapProgress = useMemo(() =>
+    state.baseline ? getGapProgress(state.baseline, state.answers, MODULES) : null
+  , [state.baseline, state.answers]);
+
   const runAiAnalysis = async () => {
     setIsAnalyzing(true);
     try {
@@ -176,12 +187,19 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, aiAnalysis, onAiAn
       }).join('\n');
 
       const criticalGaps = scores
-        .flatMap(s => s.gaps.map(g => ({ moduleName: s.name, ...g })))
+        .flatMap(s => s.gaps.map(g => ({ moduleId: s.id, moduleName: s.name, ...g })))
         .filter(g => g.value <= 0.5)
         .sort((a, b) => a.value - b.value)
         .slice(0, 10)
-        .map(g => `- [${g.moduleName}] ${g.text.slice(0, 180)}`)
+        .map(g => {
+          const justif = (state.answers[`${g.moduleId}_${g.questionId}`]?.justificacion || '').trim();
+          return `- [${g.moduleName}] ${g.text.slice(0, 180)}${justif ? `\n  Observación del auditor en terreno: ${justif.slice(0, 260)}` : ''}`;
+        })
         .join('\n');
+
+      const avanceBrechas = gapProgress
+        ? `\nAVANCE EN CIERRE DE BRECHAS (línea base: ${gapProgress.baselineDate})\n- Brechas en línea base: ${gapProgress.baselineGaps} | Cerradas: ${gapProgress.closed} | Abiertas: ${gapProgress.open} | Avance ponderado: ${Math.round(gapProgress.pctWeighted)}%${gapProgress.regressed.length ? ` | Brechas nuevas o retrocedidas: ${gapProgress.regressed.length}` : ''}`
+        : '';
 
       const systemMessage = 'Eres un asesor experto en GRC (Gobierno, Riesgo y Cumplimiento), especialista en ciberseguridad (CIS Controls IG1), protección de datos (Ley 21.719 chilena), continuidad de negocio (ISO 22301), cadena de suministro y gestión del riesgo humano. Generas planes de acción concretos, priorizados por impacto, en español formal de Chile.';
 
@@ -201,6 +219,7 @@ ${moduleSummaries}
 
 HALLAZGOS CRÍTICOS (peores 10)
 ${criticalGaps || 'Sin hallazgos críticos.'}
+${avanceBrechas}
 
 INSTRUCCIONES
 Genera un plan de acción con esta estructura exacta:
@@ -263,10 +282,12 @@ Sé directo, técnico y específico. No uses generalidades. Máximo 800 palabras
   return (
     <div className="space-y-8 animate-in fade-in duration-1000 pb-24">
       {/* Dynamic Hero Section */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-950 p-10 text-white shadow-2xl">
-        <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-indigo-600/30 blur-[120px] pointer-events-none"></div>
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 p-10 text-white shadow-2xl ring-1 ring-white/10">
+        <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-indigo-600/40 blur-[120px] pointer-events-none"></div>
+        <div className="absolute left-1/3 -top-32 h-72 w-72 rounded-full bg-violet-600/25 blur-[100px] pointer-events-none"></div>
         <div className="absolute -left-20 -bottom-20 h-96 w-96 rounded-full bg-emerald-600/20 blur-[120px] pointer-events-none"></div>
-        
+        <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '28px 28px' }}></div>
+
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
           <div className="flex items-center space-x-8">
             <div className="w-24 h-24 bg-gradient-to-tr from-indigo-500 to-indigo-700 rounded-[2rem] flex items-center justify-center p-4 shadow-2xl shadow-indigo-500/40 rotate-3">
@@ -303,6 +324,28 @@ Sé directo, técnico y específico. No uses generalidades. Máximo 800 palabras
              <button onClick={onGoHome} className="w-14 h-14 bg-white/5 hover:bg-white/10 rounded-2xl flex items-center justify-center transition-all border border-white/10 text-white shadow-inner">
                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
              </button>
+          </div>
+        </div>
+
+        {/* KPI Strip */}
+        <div className="relative z-10 mt-10 grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-white/[0.06] backdrop-blur-md border border-white/10 rounded-2xl px-6 py-5">
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">Cumplimiento Global</p>
+            <p className="text-3xl font-black tabular-nums leading-none">{Math.round(globalCompliance)}<span className="text-base text-slate-400 font-bold">%</span></p>
+          </div>
+          <div className="bg-white/[0.06] backdrop-blur-md border border-white/10 rounded-2xl px-6 py-5">
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">Brechas Abiertas</p>
+            <p className={`text-3xl font-black tabular-nums leading-none ${openGapsNow > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>{openGapsNow}</p>
+          </div>
+          <div className="bg-white/[0.06] backdrop-blur-md border border-white/10 rounded-2xl px-6 py-5">
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">Avance vs Línea Base</p>
+            <p className="text-3xl font-black tabular-nums leading-none">
+              {gapProgress ? <span className="text-emerald-400">{Math.round(gapProgress.pctWeighted)}<span className="text-base text-slate-400 font-bold">%</span></span> : <span className="text-slate-500 text-lg font-bold">Sin fijar</span>}
+            </p>
+          </div>
+          <div className="bg-white/[0.06] backdrop-blur-md border border-white/10 rounded-2xl px-6 py-5">
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">Controles Evaluados</p>
+            <p className="text-3xl font-black tabular-nums leading-none">{Object.keys(state.answers).length}<span className="text-base text-slate-400 font-bold"> / {MODULES.reduce((a, m) => a + m.questions.length, 0)}</span></p>
           </div>
         </div>
       </div>
@@ -390,22 +433,144 @@ Sé directo, técnico y específico. No uses generalidades. Máximo 800 palabras
             </div>
             
             <h5 className="font-black text-slate-800 text-base mb-4 tracking-tight group-hover:text-indigo-600 transition-colors">{s.name}</h5>
-            
+
             <div className="flex items-end justify-between mb-3">
               <span className="text-4xl font-black text-slate-900 tabular-nums">
                 {Math.round(s.score)}<span className="text-xs text-slate-300 font-bold">%</span>
               </span>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 group-hover:text-indigo-400 transition-colors">Ver Detalles</span>
             </div>
-            
-            <div className="w-full bg-slate-50 rounded-full h-3.5 overflow-hidden p-0.5 border border-slate-100 mb-2">
-               <div 
-                 className="h-full rounded-full transition-all duration-1000 ease-out shadow-sm" 
+
+            <div className="w-full bg-slate-50 rounded-full h-3.5 overflow-hidden p-0.5 border border-slate-100 mb-4">
+               <div
+                 className="h-full rounded-full transition-all duration-1000 ease-out shadow-sm"
                  style={{ width: `${s.score}%`, backgroundColor: s.color }}
                ></div>
             </div>
+
+            {/* Brechas abiertas del módulo */}
+            {(() => {
+              const openGaps = MODULES.find(m => m.id === s.id)!.questions
+                .filter(q => { const a = state.answers[`${s.id}_${q.id}`]; return a && isGapValue(a.value); }).length;
+              return (
+                <div className="flex items-center gap-2 pt-3 border-t border-slate-50">
+                  <span className={`w-2 h-2 rounded-full ${openGaps > 0 ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    {openGaps > 0 ? `${openGaps} brecha${openGaps !== 1 ? 's' : ''} abierta${openGaps !== 1 ? 's' : ''}` : s.answered > 0 ? 'Sin brechas abiertas' : 'Sin evaluar'}
+                  </span>
+                </div>
+              );
+            })()}
           </div>
         ))}
+      </div>
+
+      {/* Avance en Cierre de Brechas (vs línea base) */}
+      <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-200/60">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+          <div>
+            <h4 className="text-2xl font-black text-slate-900 tracking-tight mb-1 uppercase">Avance en Cierre de Brechas</h4>
+            <p className="text-slate-400 text-sm font-medium">
+              {gapProgress
+                ? <>Comparado contra la línea base fijada el <span className="font-black text-slate-600">{gapProgress.baselineDate}</span></>
+                : 'Fije una línea base para medir el progreso de remediación entre evaluaciones.'}
+            </p>
+          </div>
+          <button
+            onClick={onSetBaseline}
+            className="px-6 py-3.5 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center gap-3 flex-shrink-0"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
+            {gapProgress ? 'Actualizar Línea Base' : 'Fijar Línea Base'}
+          </button>
+        </div>
+
+        {!gapProgress ? (
+          <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-10 text-center">
+            <p className="text-sm text-slate-500 font-medium max-w-xl mx-auto leading-relaxed">
+              Al fijar la línea base se congela una foto de la evaluación actual. Cuando el cliente re-evalúe
+              —por ejemplo a los 90 días— este panel mostrará cuántas brechas se cerraron, cuáles retrocedieron
+              y el porcentaje de avance ponderado por la criticidad de cada control.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Métricas principales */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="rounded-2xl bg-slate-50 border border-slate-100 p-6">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Brechas en Línea Base</p>
+                <p className="text-4xl font-black text-slate-900 tabular-nums">{gapProgress.baselineGaps}</p>
+              </div>
+              <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-6">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-600 mb-2">Cerradas</p>
+                <p className="text-4xl font-black text-emerald-600 tabular-nums">{gapProgress.closed}</p>
+              </div>
+              <div className="rounded-2xl bg-amber-50 border border-amber-100 p-6">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-600 mb-2">Aún Abiertas</p>
+                <p className="text-4xl font-black text-amber-600 tabular-nums">{gapProgress.open}</p>
+              </div>
+              <div className="rounded-2xl bg-indigo-600 p-6 shadow-lg shadow-indigo-200">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-200 mb-2">Avance Ponderado</p>
+                <p className="text-4xl font-black text-white tabular-nums">{Math.round(gapProgress.pctWeighted)}<span className="text-lg text-indigo-300">%</span></p>
+              </div>
+            </div>
+
+            {/* Exposición sancionatoria MPI */}
+            {gapProgress.mpi.length > 0 && (
+              <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-slate-50 border border-slate-100 px-6 py-4">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Exposición sancionatoria (MPI Ley 21.719):</span>
+                {gapProgress.mpi.map(m => (
+                  <span key={m.clase} className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-full ${m.clase === 'gravísima' ? 'bg-rose-100 text-rose-700' : m.clase === 'grave' ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700'}`}>
+                    {m.clase}: {m.abiertas} abierta{m.abiertas !== 1 ? 's' : ''}{m.cerradas > 0 ? ` · ${m.cerradas} cerrada${m.cerradas !== 1 ? 's' : ''}` : ''}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Avance por módulo */}
+            {gapProgress.byModule.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4">
+                {gapProgress.byModule.map(m => (
+                  <div key={m.moduleId} className="flex items-center gap-4">
+                    <span className="text-[11px] font-bold text-slate-700 w-44 truncate">{m.moduleName}</span>
+                    <div className="flex-1 bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                      <div className="h-full rounded-full bg-emerald-500 transition-all duration-700" style={{ width: `${m.baselineGaps ? (m.closed / m.baselineGaps) * 100 : 0}%` }} />
+                    </div>
+                    <span className="text-[10px] font-black text-slate-500 tabular-nums w-14 text-right">{m.closed}/{m.baselineGaps}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Movimientos */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="rounded-2xl border border-emerald-100 overflow-hidden">
+                <div className="bg-emerald-50 px-5 py-3 text-[10px] font-black uppercase tracking-widest text-emerald-700">Brechas cerradas ({gapProgress.closedList.length})</div>
+                <div className="divide-y divide-slate-50 max-h-64 overflow-y-auto">
+                  {gapProgress.closedList.length === 0 && <p className="px-5 py-4 text-xs text-slate-400 italic">Aún no se cierran brechas respecto de la línea base.</p>}
+                  {gapProgress.closedList.slice(0, 12).map((m, i) => (
+                    <div key={i} className="px-5 py-3">
+                      <p className="text-xs font-semibold text-slate-700 line-clamp-2">{m.text}</p>
+                      <p className="text-[10px] text-slate-400 mt-1">{m.moduleName} · <span className="text-rose-400 line-through">{m.fromLabel.slice(0, 44)}</span> → <span className="text-emerald-600 font-bold">{m.toLabel.slice(0, 44)}</span></p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-rose-100 overflow-hidden">
+                <div className="bg-rose-50 px-5 py-3 text-[10px] font-black uppercase tracking-widest text-rose-700">Brechas nuevas o retrocedidas ({gapProgress.regressed.length})</div>
+                <div className="divide-y divide-slate-50 max-h-64 overflow-y-auto">
+                  {gapProgress.regressed.length === 0 && <p className="px-5 py-4 text-xs text-slate-400 italic">Sin retrocesos: ninguna brecha nueva respecto de la línea base.</p>}
+                  {gapProgress.regressed.slice(0, 12).map((m, i) => (
+                    <div key={i} className="px-5 py-3">
+                      <p className="text-xs font-semibold text-slate-700 line-clamp-2">{m.text}</p>
+                      <p className="text-[10px] text-slate-400 mt-1">{m.moduleName} · ahora: <span className="text-rose-600 font-bold">{m.toLabel.slice(0, 60)}</span></p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Análisis por Categoría / Subdominios */}
@@ -503,6 +668,15 @@ Sé directo, técnico y específico. No uses generalidades. Máximo 800 palabras
                               <span className="text-[9px] font-black text-slate-300 group-hover/gap-item:text-indigo-400">FINDING-{gap.questionId}</span>
                            </div>
                            <p className="text-[11px] text-slate-600 font-bold leading-relaxed mb-3">{gap.text}</p>
+                           {(() => {
+                             const justif = (state.answers[`${s.id}_${gap.questionId}`]?.justificacion || '').trim();
+                             return justif ? (
+                               <p className="text-[10px] text-slate-500 italic leading-relaxed mb-3 pl-3 border-l-2 border-indigo-200">
+                                 <span className="not-italic font-black text-indigo-400 uppercase tracking-wider text-[8px] block mb-0.5">Observación del auditor</span>
+                                 {justif}
+                               </p>
+                             ) : null;
+                           })()}
                            <div className="flex items-center gap-2">
                               <div className="w-full bg-slate-200 h-1 rounded-full overflow-hidden">
                                  <div className="h-full bg-red-500" style={{ width: `${(1 - gap.value) * 100}%` }}></div>
