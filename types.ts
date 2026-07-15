@@ -1,5 +1,5 @@
 
-export type ModuleId = 'CIBER' | 'LEGAL' | 'INFRA' | 'VENDOR' | 'PEOPLE';
+export type ModuleId = 'CIBER' | 'LEGAL' | 'ANCI' | 'INFRA' | 'VENDOR' | 'PEOPLE';
 
 export interface Option {
   texto: string;
@@ -13,8 +13,9 @@ export interface Question {
   opciones?: string[] | Option[];
   peso?: number;
   guia?: string;        // Guía para el auditor: qué evaluar, evidencia a solicitar y por qué importa
-  referencia?: string;  // Referencia legal que la pregunta operacionaliza (módulo LEGAL/MPI)
+  referencia?: string;  // Referencia legal que la pregunta operacionaliza (módulos LEGAL/MPI y ANCI)
   infraccion?: 'leve' | 'grave' | 'gravísima'; // Clase de infracción que gatilla su incumplimiento
+  nivel?: 'general' | 'oiv' | 'publico'; // Aplicabilidad Ley 21.663: todo servicio esencial / solo OIV / solo sector público
 }
 
 export interface ModuleData {

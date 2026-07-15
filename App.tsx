@@ -73,6 +73,7 @@ const App: React.FC = () => {
   const moduleColors: Record<ModuleId, string> = {
     CIBER: '#10b981',  // Emerald
     LEGAL: '#f43f5e',  // Rose
+    ANCI: '#4f46e5',   // Indigo
     INFRA: '#f59e0b',  // Amber
     VENDOR: '#0ea5e9', // Sky
     PEOPLE: '#d946ef'  // Fuchsia
@@ -197,6 +198,7 @@ const App: React.FC = () => {
     const moduleColorMap: Record<string, [number,number,number]> = {
       CIBER:  [16, 185, 129],
       LEGAL:  [244, 63, 94],
+      ANCI:   [79, 70, 229],
       INFRA:  [245, 158, 11],
       VENDOR: [14, 165, 233],
       PEOPLE: [217, 70, 239],

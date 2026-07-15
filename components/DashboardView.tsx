@@ -140,6 +140,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ state, aiAnalysis, onAiAn
   const moduleColors: Record<ModuleId, string> = {
     CIBER: '#10b981',  // Emerald
     LEGAL: '#f43f5e',  // Rose
+    ANCI: '#4f46e5',   // Indigo
     INFRA: '#f59e0b',  // Amber
     VENDOR: '#0ea5e9', // Sky
     PEOPLE: '#d946ef'  // Fuchsia
