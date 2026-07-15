@@ -274,11 +274,34 @@ Sé directo, técnico y específico. No uses generalidades. Máximo 800 palabras
     }
   };
 
+  const shortLabels: Record<string, string> = {
+    CIBER: 'Ciberseguridad',
+    ANCI: 'Ley 21.663',
+    LEGAL: 'Datos 21.719',
+    INFRA: 'Continuidad',
+    VENDOR: 'Proveedores',
+    PEOPLE: 'Personas'
+  };
+
   const radarData = scores.map(s => ({
-    subject: s.name.split(':')[0],
+    subject: shortLabels[s.id] || s.name,
     A: s.score,
     fullMark: 100
   }));
+
+  // Cumplimiento por lente normativa (para el panel ejecutivo)
+  const byId = (id: string) => scores.find(s => s.id === id);
+  const nivelDe = (v: number) =>
+    v >= 90 ? { txt: 'Óptimo', c: '#059669', bg: '#ecfdf5' } :
+    v >= 70 ? { txt: 'Adecuado', c: '#65a30d', bg: '#f7fee7' } :
+    v >= 50 ? { txt: 'Medio', c: '#d97706', bg: '#fffbeb' } :
+    v >= 30 ? { txt: 'Alto', c: '#ea580c', bg: '#fff7ed' } :
+              { txt: 'Crítico', c: '#dc2626', bg: '#fef2f2' };
+  const lentes = [
+    { id: 'CIBER', etiqueta: 'Ciberseguridad Técnica', sub: 'CIS Controls IG1', color: '#10b981' },
+    { id: 'ANCI',  etiqueta: 'Ley 21.663 · ANCI', sub: 'Marco de Ciberseguridad', color: '#4f46e5' },
+    { id: 'LEGAL', etiqueta: 'Ley 21.719 · Datos', sub: 'Protección de Datos (MPI)', color: '#f43f5e' }
+  ].map(l => { const s = byId(l.id); const v = s ? s.score : 0; return { ...l, valor: v, nivel: nivelDe(v), answered: s?.answered || 0, total: s?.total || 0 }; });
 
   return (
     <div className="space-y-8 animate-in fade-in duration-1000 pb-24">
@@ -351,6 +374,47 @@ Sé directo, técnico y específico. No uses generalidades. Máximo 800 palabras
         </div>
       </div>
 
+      {/* Panel de Cumplimiento Normativo */}
+      <div>
+        <div className="flex items-center gap-3 mb-4 px-2">
+          <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">Cumplimiento Normativo</h4>
+          <div className="h-px flex-1 bg-slate-100"></div>
+          <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">3 marcos evaluados</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {lentes.map(l => (
+            <div
+              key={l.id}
+              onClick={() => onSwitchModule(l.id as ModuleId)}
+              className="group relative bg-white rounded-3xl p-7 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+            >
+              <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-[0.05] group-hover:opacity-10 transition-opacity" style={{ backgroundColor: l.color }}></div>
+              <div className="relative z-10">
+                <div className="flex items-start justify-between mb-5">
+                  <div>
+                    <p className="text-sm font-black text-slate-800 tracking-tight leading-tight">{l.etiqueta}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">{l.sub}</p>
+                  </div>
+                  <span
+                    className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full whitespace-nowrap"
+                    style={{ color: l.nivel.c, backgroundColor: l.nivel.bg }}
+                  >{l.nivel.txt}</span>
+                </div>
+                <div className="flex items-end justify-between mb-3">
+                  <span className="text-5xl font-black tabular-nums tracking-tight" style={{ color: l.color }}>
+                    {Math.round(l.valor)}<span className="text-lg text-slate-300 font-bold">%</span>
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400 tabular-nums mb-2">{l.answered}/{l.total}</span>
+                </div>
+                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${l.valor}%`, backgroundColor: l.color }}></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Main Indicators Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Gauge and Interpretation */}
@@ -359,7 +423,7 @@ Sé directo, técnico y específico. No uses generalidades. Máximo 800 palabras
             <div className="absolute top-0 right-0 p-8 text-slate-100 group-hover:text-slate-200 transition-colors">
               <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
             </div>
-            <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] mb-8 text-center">Nivel de Riesgo en Ciberseguridad</h4>
+            <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] mb-8 text-center">Nivel de Riesgo GRC Global</h4>
             <GaugeIndicator score={globalCompliance} />
           </div>
           
