@@ -43,6 +43,7 @@ export interface Answer {
   label: string;
   evidence?: FileEvidence[];
   justificacion?: string; // Observación del auditor que sustenta la respuesta (obligatoria en brechas)
+  auto?: boolean; // Marcada automáticamente (p. ej. N/A por clasificación ANCI), no por el auditor
 }
 
 // Foto congelada de una evaluación para medir avance en el cierre de brechas
@@ -58,6 +59,8 @@ export interface EvaluationMetadata {
   evaluatorName: string;
   evaluatorRole: string;
   date: string;
+  clasificacionAnci?: string; // 'esencial' | 'oiv' | 'proceso' — condición ante la Ley 21.663
+  sectorAnci?: string;        // 'privado' | 'publico' — para el deber del sector público
 }
 
 export interface GRCState {

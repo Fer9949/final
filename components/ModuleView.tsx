@@ -185,6 +185,7 @@ const ModuleView: React.FC<ModuleViewProps> = ({ module, answers, onAnswer, onBa
                       {q.categoria && <span className="inline-block px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-wider">{q.categoria}</span>}
                       {q.referencia && <span className="inline-block px-2.5 py-1 bg-violet-50 text-violet-600 rounded-lg text-[10px] font-bold tracking-wide border border-violet-100">{q.referencia}</span>}
                       {q.infraccion && <span className={`inline-block px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${infraccionStyle[q.infraccion]}`}>Infracción {q.infraccion}</span>}
+                      {currentAnswer?.auto && <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-wider border border-slate-200">No aplica · clasificación ANCI</span>}
                     </div>
                     <h4 className="text-slate-800 text-lg font-semibold leading-relaxed tracking-tight">{q.pregunta}</h4>
                     {q.guia && (

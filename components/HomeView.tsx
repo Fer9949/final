@@ -105,7 +105,7 @@ const HomeView: React.FC<HomeViewProps> = ({ metadata, onChange, onStart }) => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Evaluador</label>
-                <input 
+                <input
                   type="text"
                   placeholder="Auditores / CISO"
                   value={metadata.evaluatorName}
@@ -115,7 +115,7 @@ const HomeView: React.FC<HomeViewProps> = ({ metadata, onChange, onStart }) => {
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cargo</label>
-                <input 
+                <input
                   type="text"
                   placeholder="Rol del evaluador"
                   value={metadata.evaluatorRole}
@@ -123,6 +123,42 @@ const HomeView: React.FC<HomeViewProps> = ({ metadata, onChange, onStart }) => {
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                 />
               </div>
+            </div>
+
+            {/* Clasificación Ley 21.663 — determina qué deberes del módulo ANCI aplican */}
+            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Clasificación Ley 21.663 (ANCI)</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Condición ante la ley</label>
+                  <select
+                    value={metadata.clasificacionAnci || 'proceso'}
+                    onChange={(e) => onChange('clasificacionAnci', e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                  >
+                    <option value="proceso">Por determinar / En proceso</option>
+                    <option value="esencial">Servicio esencial (no OIV)</option>
+                    <option value="oiv">Operador de Importancia Vital</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sector</label>
+                  <select
+                    value={metadata.sectorAnci || 'privado'}
+                    onChange={(e) => onChange('sectorAnci', e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                  >
+                    <option value="privado">Privado</option>
+                    <option value="publico">Organismo del Estado</option>
+                  </select>
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-500 leading-relaxed">
+                Los deberes específicos del art. 8° solo aplican al Operador de Importancia Vital; el deber del sector público, solo a organismos del Estado. Las preguntas que no correspondan se marcan «No aplica» automáticamente.
+              </p>
             </div>
           </div>
 

@@ -20,8 +20,17 @@ const defaultState: GRCState = {
     processOwner: '',
     evaluatorName: '',
     evaluatorRole: '',
-    date: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })
+    date: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }),
+    clasificacionAnci: 'proceso',
+    sectorAnci: 'privado'
   }
+};
+
+// Aplicabilidad de una pregunta del módulo ANCI según la clasificación de la organización ante la Ley 21.663
+const isAnciApplicable = (nivel: string | undefined, meta: EvaluationMetadata): boolean => {
+  if (nivel === 'oiv') return meta.clasificacionAnci === 'oiv' || meta.clasificacionAnci === 'proceso';
+  if (nivel === 'publico') return meta.sectorAnci === 'publico';
+  return true; // deberes generales (o preguntas sin nivel) siempre aplican
 };
 
 const loadPersistedState = (): GRCState => {
@@ -52,6 +61,32 @@ const App: React.FC = () => {
       else localStorage.removeItem(AI_STORAGE_KEY);
     } catch {}
   }, [aiAnalysis]);
+
+  // Sincroniza el auto-«No aplica» de las preguntas del módulo ANCI según la clasificación de la organización.
+  // No sobreescribe respuestas manuales; solo autocompleta las no aplicables sin responder y limpia las auto cuando vuelven a aplicar.
+  useEffect(() => {
+    const anci = MODULES.find(m => m.id === 'ANCI');
+    if (!anci) return;
+    setState(prev => {
+      let changed = false;
+      const answers = { ...prev.answers };
+      for (const q of anci.questions) {
+        const key = `ANCI_${q.id}`;
+        const applicable = isAnciApplicable(q.nivel, prev.metadata);
+        const cur = answers[key];
+        if (!applicable) {
+          if (!cur) {
+            answers[key] = { moduleId: 'ANCI', questionId: q.id, value: -1, label: 'No aplica · clasificación ANCI', auto: true, evidence: [] };
+            changed = true;
+          }
+        } else if (cur && cur.auto) {
+          delete answers[key];
+          changed = true;
+        }
+      }
+      return changed ? { ...prev, answers } : prev;
+    });
+  }, [state.metadata.clasificacionAnci, state.metadata.sectorAnci]);
 
   const resetEvaluation = useCallback(() => {
     if (confirm('¿Descartar la evaluación actual y comenzar una nueva? Esta acción no se puede deshacer.')) {
