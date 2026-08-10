@@ -598,7 +598,7 @@ const App: React.FC = () => {
       pdf.setFontSize(7);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(...SLATE);
-      pdf.text(`Generado con Nemotron 3 Super 120B vía OpenRouter • ${state.metadata.date}`, M, y + 11);
+      pdf.text(`Generado con Nemotron 3 Super 120B vía NVIDIA • ${state.metadata.date}`, M, y + 11);
       pdf.setDrawColor(...INDIGO);
       pdf.setLineWidth(0.5);
       pdf.line(M, y + 13, M + CW, y + 13);

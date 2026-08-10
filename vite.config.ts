@@ -2,7 +2,7 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// La API key de OpenRouter NO se inyecta en el cliente. Vive solo en el
+// La API key de NVIDIA NO se inyecta en el cliente. Vive solo en el
 // servidor (Vercel env vars) y la consume la función serverless /api/analyze.
 export default defineConfig(() => {
     return {
