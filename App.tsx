@@ -202,13 +202,26 @@ const App: React.FC = () => {
 
   // ── LÓGICA EXPORTAR PDF (jsPDF puro, sin html2canvas) ──
   const handleExportPDF = useCallback(() => {
-    // Toda brecha (respuesta < 0.7) debe tener justificación del auditor antes de emitir el reporte
+    // Las brechas sin justificar ya no impiden emitir el reporte: hay trabajo de
+    // terreno donde el sustento se redacta después, y bloquear la descarga
+    // dejaba al auditor sin nada que mostrar mientras tanto.
+    //
+    // Lo que no se pierde es la advertencia: se avisa antes de generar y, si se
+    // continúa, el PDF sale marcado como PRELIMINAR en la portada y en el pie de
+    // cada página. Así el documento nunca se confunde con uno respaldado, que es
+    // lo que el bloqueo original protegía.
     const pendientes = getPendingJustifications(state.answers, MODULES);
     if (pendientes.length > 0) {
-      const detalle = pendientes.slice(0, 8).map(p => `• ${p.moduleName} — pregunta ${p.questionId}`).join('\n');
-      alert(`No se puede exportar el reporte: hay ${pendientes.length} brecha(s) sin justificación del auditor.\n\nUn hallazgo sin sustento es indefendible. Complete la justificación en:\n\n${detalle}${pendientes.length > 8 ? `\n…y ${pendientes.length - 8} más.` : ''}`);
-      return;
+      const detalle = pendientes.slice(0, 6).map(p => `• ${p.moduleName} — pregunta ${p.questionId}`).join('\n');
+      const continuar = confirm(
+        `Hay ${pendientes.length} brecha(s) sin justificación del auditor.\n\n` +
+        `El reporte se emitirá marcado como PRELIMINAR: un hallazgo sin sustento documentado no es defendible ante un tercero.\n\n` +
+        `Sin justificar, entre otras:\n${detalle}${pendientes.length > 6 ? `\n…y ${pendientes.length - 6} más.` : ''}\n\n` +
+        `¿Generar el PDF de todas formas?`
+      );
+      if (!continuar) return;
     }
+    const esPreliminar = pendientes.length > 0;
 
     const M = 15;          // margen 15mm = 1.5cm
     const PW = 215.9;      // ancho hoja carta mm
@@ -281,8 +294,21 @@ const App: React.FC = () => {
       pdf.setFont('helvetica', 'normal');
       pdf.text('SISTEMA DE CUMPLIMIENTO DE CIBERSEGURIDAD Y PROTECCIÓN DE DATOS', M, PH - 4);
       pdf.text(`Página ${page}`, PW - M, PH - 4, { align: 'right' });
+      // La marca va en todas las páginas: una hoja suelta del informe tambien
+      // tiene que delatar que el reporte no está respaldado.
+      if (esPreliminar) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(...ORANGE);
+        pdf.text('PRELIMINAR', PW / 2, PH - 4, { align: 'center' });
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(...SLATE);
+      }
       y = savedY;
     };
+
+    // La portada no llevaba pie de pagina: quedaba sin numerar y, ahora, sin la
+    // marca de preliminar. Se dibuja igual que en el resto.
+    drawFooter();
 
     // ---- PÁGINA 1: PORTADA ----
     // Header oscuro
@@ -310,6 +336,34 @@ const App: React.FC = () => {
     pdf.setFont('helvetica', 'normal');
     pdf.text('/ 1000', PW - M - 23, y + 28, { align: 'center' });
     y += 44;
+
+    // ---- AVISO DE REPORTE PRELIMINAR ----
+    // Va inmediatamente bajo la portada, antes de cualquier cifra: quien reciba
+    // el informe tiene que saber en la primera mirada que los hallazgos aun no
+    // tienen sustento documentado.
+    if (esPreliminar) {
+      const avisoLineas = pdf.splitTextToSize(
+        `Este documento se emite sin la justificación del auditor en ${pendientes.length} de los hallazgos. ` +
+        `Las cifras y brechas son las registradas en la evaluación, pero los hallazgos no justificados ` +
+        `no cuentan con sustento documentado y no deben presentarse como conclusiones firmes ante ` +
+        `terceros, auditores externos ni autoridades.`,
+        CW - 10
+      );
+      const alto = 10 + avisoLineas.length * 4;
+      pdf.setFillColor(255, 247, 237);            // ámbar muy claro
+      pdf.roundedRect(M, y, CW, alto, 2, 2, 'F');
+      pdf.setFillColor(...ORANGE);
+      pdf.rect(M, y, 1.5, alto, 'F');             // filete lateral
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(...ORANGE);
+      pdf.text('INFORME PRELIMINAR', M + 5, y + 6);
+      pdf.setFontSize(7.5);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(...DARK);
+      pdf.text(avisoLineas, M + 5, y + 11);
+      y += alto + 6;
+    }
 
     // ---- SECCIÓN: SCORE EJECUTIVO ----
     checkY(20);
@@ -731,7 +785,10 @@ const App: React.FC = () => {
     }
 
     const processName = state.metadata.processName || 'GRC';
-    pdf.save(`Panel-Control-GRC-${processName}.pdf`);
+    // El prefijo evita que un preliminar se archive o se envie como si fuera el
+    // informe definitivo.
+    const prefijo = esPreliminar ? 'PRELIMINAR-' : '';
+    pdf.save(`${prefijo}Panel-Control-GRC-${processName}.pdf`);
   }, [state.answers, state.activeModule, state.metadata, aiAnalysis]);
 
   const currentModule = useMemo(() => {
